@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<meta name="author" content="Ahsan Khan"/>
+		<meta name="description" content="Drag and drop task manager"/>
+		<meta name="viewport" content="width-device-width, user-scalable="no"/>
+		<link rel="stylesheet"  type="text/css" media="screen" href="style.css"/>
+		<script type="text/javascript" src="redips-drag-min.js"></script>
+		<script type="text/javascript" src="script.js"></script>
+		<!-- load jQuery -->
+		<link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" />
+		<script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+		<script src="http://jqueryui.com/resources/demos/external/jquery.bgiframe-2.1.2.js"></script>
+		<script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+		<title>Task manager</title>
+	<style>
+	body { font-size: 80%; }
+	label, input {display:block;}
+
+	</style>
+	<script>
+		$(function() {
+			var name= $("#name"),
+				 stage = $("#stage"),
+				 assignedTo = $("#assignedTo"),
+				 size = $("#size"),
+				 allFields = $([]).add(name).add(stage).add(assignedTo).add(size);
+			
+			$("#task-form").dialog({
+				autoOpen: false,
+				height: 350,
+				width: 400,
+				modal: true,
+				buttons: {
+					"Create a task": function() {
+						var bValid = true;
+						allFields.removeClass("ui-state-error");
+						if (bValid) {
+							//$("#tasks tbody").append("<tr>" + 
+							//	"<td><div class=\"drag\">" + 
+							//	name.val() + "</div></td><td></td><td/><td/></tr>"
+							//	);
+							$("#initial").append("<div class=\"drag\">" 
+								+ name.val() + "</div>");
+							REDIPS.drag.enableDrag('init');
+							$(this).dialog("close");
+						}
+					},
+					Cancel: function() {
+						$(this).dialog("close");
+					}
+				},
+				close: function() {
+					allFields.val("").removeClass("ui-state-error");
+				}
+			});
+			
+			$("#create-task")
+				.button()
+				.click(function() {
+					$("#task-form").dialog("open");
+				});
+		});
+			
+	</script>
+	</head>
+	<body onload="REDIPS.drag.init()">
+		<div style="background-color:#eee;padding:10px;text-align:center;font-size:20px;font-weight:bold">Task Manager</div>
+		<div>
+			<p>Create a task by pressing the button. Then you can drag and drop the task in the table.</p>
+		</div>
+		<button id="create-task">Create a new task</button>
+		<div id="task-form" title="Create a task">
+			<p>Enter task description.</p>
+			<form>
+				<fieldset>
+					<label for="name">Name</label>
+					<input type="text" name="name" id="name" class="text ui-widget-content ui-corner-all"/>
+					<label for="assignedTo">Assigned to</label>
+					<input type="text" name="assignedTo" id="assignedTo" id="name" class="text ui-widget-content ui-corner-all"/>
+					<label for="name">Size</label>
+					<input type="text" name="size" id="size" class="text ui-widget-content ui-corner-all"/>
+				</fieldset>
+			</form>
+		</div>
+		<center>
+			<div id="drag">
+				<table id="tasks">
+					<colgroup>
+						<col width="100"/>
+						<col width="100"/>
+						<col width="100"/>
+						<col width="100"/>
+					</colgroup>
+					<thead>
+						<tr>
+							<td class="mark dark">Initial</td>
+							<td class="mark dark">Working</td>
+							<td class="mark dark">Validation</td>
+							<td class="mark dark">Done</td>					
+						</tr>					
+					</thead>
+					<tbody>
+						<tr>
+							<td id="initial"></td>
+							<td id="working"></td>
+							<td id="validation"></td>
+							<td id="done"></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</center>
+	</body>
+</html>
+
+						
