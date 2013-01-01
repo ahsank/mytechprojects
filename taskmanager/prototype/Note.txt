@@ -1,8 +1,7 @@
 Definition
 -----------------------
-2012/28 = 1
-19 = 7 pm
-last 1.12
+Start 12/28/2012
+last 1.14
 
 
 1. todo
@@ -15,6 +14,8 @@ last 1.12
 	1.6. How to do different views
 	1.7. Make the dialog box better
 1.13. Use sproutcore
+1.14. Use backbone.js
+
 
 2. Future
 ----------------------------------
