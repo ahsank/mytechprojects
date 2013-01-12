@@ -1,27 +1,27 @@
 /*
 
-Darko Bunic
-http://www.redips.net/
-Oct, 2010.
+Ahsan Khan
 
 */
 
 body{
-	font-family: arial;
-	margin: 0px; /* for IE6 / IE7 */
+	padding-top: 60px;
+    padding-bottom: 40px;
 }
-
+	label, input {display:block;} 
 /* make drag container visible */
+/*
 #drag{
 	border: 2px dashed LightBlue;
 	display: table;
 }
-
+*/
 /* table */
 div#drag table {
-	background-color: #eee;
+	/*background-color: #eee;*/
 	border-collapse: collapse;
-	margin: 7px;	
+	margin-top: 10pt;
+	width: 100%;
 }
 
 /* table cells */
@@ -37,10 +37,10 @@ div#drag td{
 .drag{
 	margin: auto;
 	text-align: center;
-	width: 87px;
-	height: 35px;
-	line-height: 35px;
-	border: 2px solid SteelBlue;
+	/*width: 87px;*/
+	/*height: 35px;*/
+	/*line-height: 35px;*/
+	border: 0px solid SteelBlue;
 	background-color: white;
 }
 
@@ -58,3 +58,23 @@ div#drag td{
 .dark{
 	background-color: #e0e0e0;
 }
+
+ul.sticky_notes{ list-style:none; }
+
+ul.sticky_notes li{
+	/*width:250px;
+	height:200px;
+	padding:20px;
+	margin:20px;*/
+	padding:2px;
+	margin:2px;
+	float:left;
+  -moz-box-shadow:5px 5px 7px rgba(33,33,33,1);
+  -webkit-box-shadow: 5px 5px 7px rgba(33,33,33,.7);
+  box-shadow: 5px 5px 7px rgba(33,33,33,.7);
+  /*-webkit-transform:rotate(-6deg);
+  -o-transform:rotate(-6deg);
+  -moz-transform:rotate(-6deg);	*/
+}
+
+.yellow{ background:#ffc; }
