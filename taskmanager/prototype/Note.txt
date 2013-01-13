@@ -1,0 +1,56 @@
+Definition
+-----------------------
+
+2012/28 = 1
+19 = 7 pm
+last 1.46
+
+
+
+1. Next
+
+
+2. todo
+	1.1 Make it presentable
+	    1.7. Make the dialog box not have scroll bar
+		1.18. Entering fields accept enter  button.
+		1.26. Make the table and buttons colorful.	
+	1.8. Understand technology used
+		1.9. css
+		1.10. javascript
+	1.11. Save pending tasks
+	1.25. Better presentation
+		1.32. Add menu and about etc menu to look like a website
+		1.41. Check different similar websites and see how is their table
+	1.26. Actual application
+		1.4. Host in amazon
+		1.5. Install wordpress in amazon
+		1.27. Database and php
+		**** 1.46. git pages for the project
+	1.19. Delete  a task
+		1.22. Right click delete?
+		1.28. Double click task edit and delete?
+		1.29. Move the task to the recycle bin?
+		1.30. Delete button?
+	1.13. Use sproutcore and blossom
+	1.14 Use ember.js and flanme.js
+	1.31. Grid view
+	1.32. Framework
+		1.15 Use bootstrap.js and backbone.js and http://addyosmani.github.com/jquery-ui-bootstrap/
+		1.20. Add data of the task in the bootstrap table.	
+	http://bootboxjs.com/
+	1.23. Custom views
+		1.24. Tab for custom view
+	1.33. Saving tasks
+		1.34. When moving/creating/editing task add entry to the history pane
+		1.35. Add a commit button
+		1.36. Upon commit save into database with history
+	1.37. View task history
+	1.38. Check how to make file readoly in git when commited.
+
+
+
+4. Wish list
+---------------------------------
+	1.12. Allow manipulate local file
+
