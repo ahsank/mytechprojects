@@ -3,7 +3,7 @@ Definition
 
 2012/28 = 1
 19 = 7 pm
-last 1.45
+last 1.46
 
 
 
@@ -11,7 +11,7 @@ last 1.45
 
 
 2. todo
-	**** 1.1 Make it presentable
+	1.1 Make it presentable
 	    1.7. Make the dialog box not have scroll bar
 		1.18. Entering fields accept enter  button.
 		1.26. Make the table and buttons colorful.	
@@ -26,6 +26,7 @@ last 1.45
 		1.4. Host in amazon
 		1.5. Install wordpress in amazon
 		1.27. Database and php
+		**** 1.46. git pages for the project
 	1.19. Delete  a task
 		1.22. Right click delete?
 		1.28. Double click task edit and delete?
