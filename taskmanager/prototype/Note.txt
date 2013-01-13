@@ -1,14 +1,14 @@
 Definition
 -----------------------
+
 2012/28 = 1
 19 = 7 pm
 last 1.45
 
+
+
 1. Next
----------------------------
-1.21. Add a sticky note task
-	http://www.paulund.co.uk/playground/demo/css_sticky_notes/
-	http://www.paulund.co.uk/create-sticky-notes-to-do-list-in-css-and-jquery
+
 
 2. todo
 	**** 1.1 Make it presentable
@@ -48,6 +48,8 @@ last 1.45
 	1.38. Check how to make file readoly in git when commited.
 
 
+
 4. Wish list
 ---------------------------------
 	1.12. Allow manipulate local file
+
