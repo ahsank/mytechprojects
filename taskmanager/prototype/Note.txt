@@ -15,9 +15,7 @@ last 1.46
 	    1.7. Make the dialog box not have scroll bar
 		1.18. Entering fields accept enter  button.
 		1.26. Make the table and buttons colorful.	
-	1.8. Understand technology used
-		1.9. css
-		1.10. javascript
+
 	1.11. Save pending tasks
 	1.25. Better presentation
 		1.32. Add menu and about etc menu to look like a website
