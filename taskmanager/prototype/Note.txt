@@ -3,7 +3,11 @@ Definition
 
 2012/28 = 1
 19 = 7 pm
+<<<<<<< HEAD
 last 1.50
+=======
+last 1.46
+>>>>>>> be05ca48058da21c3410fbcd53b8022f44499e0e
 
 
 
@@ -25,7 +29,11 @@ last 1.50
 		1.4. Host in amazon
 		1.5. Install wordpress in amazon
 		1.27. Database and php
+<<<<<<< HEAD
 		1.45. github pages
+=======
+		**** 1.46. git pages for the project
+>>>>>>> be05ca48058da21c3410fbcd53b8022f44499e0e
 	1.19. Delete  a task
 		1.22. Right click delete?
 		1.28. Double click task edit and delete?
