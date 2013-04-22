@@ -116,7 +116,13 @@ Plan
 	k. Object based routing
 	l. 
 
+Todo
+--------------------------------
+1. Write a unit test for the socket
+2.
+
 Referece
 -------------------------------
 http://www.wangafu.net/~nickm/libevent-book/01_intro.html
+https://github.com/nitrogenlogic/cliserver/blob/master/cliserver.c
 
