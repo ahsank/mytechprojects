@@ -1,83 +1,4 @@
-Organization
-===================
 
-
-* Network client
-	Subscribe ('stdin', "//localhost:8000/echo/myId")
-	Process event ({source, sourceid, msgid, text})
-		if sourceid == 1
-			publish ('//localhost:8000/echo', {myId, msgId=rand(),text})
-		else 
-			publish('stdout', txt}
-
-
-* Network server
-	Subscribe ('*:8000/echo')
-	Process event {source, sourceid, msgid, text)
-		publish("/echo/" + source, {myid, rand(), text + 'response'})
-
-Regular socket
-======================
-* server
-	bind(8000, 
-		process_request(inbuffer, outbuffer)
-			do
-				data, len, iseof = read buffer
-				write outbuffer data len
-			while !iseof
-
-*stdin echo 
-	id = connect(localhost:8000, readwrite, process_response)
-	id2 = open_file(stdout, write)
-	open_file(stdin, read_data = 
-		fn(this, buffer, iseof)
-			buffer = readline()
-			if !iseof
-				send(id, buffer))
-			else 
-				close(id)
-				close(id2)
-				close(this)
-
-	process_response(buffer)
-		data, len, iseof = read(buffer)
-		send(id2, data, len)
-	
-* Perf client
-	id = connect('localhost:8000')
-	process_echo_response = fn(Perf client p, msg, len, iseof)
-		iseof ? processed++
-		if (processed == 1M)
-			setevent(done,true)
-	time = current_time()
-	done = event(false)
-	for (int i=0; i < 1M; i++)
-		message = get_random_message()
-		send(id, message, process_echo_response)
-	wait(done)
-	print(current_time()-time)
-		
-		
-Class
---------------------
-FileEventHanlder fileHandler;
-fileHanlder.fd = 1
-fileHandler.register("fileHandler")
-
-MyClient client 
-	getEventFrom (&fileHandler, &networkHandler)
-	publishTo(&networkHandler2, &stdoutHandler2)
-	process event (Message *pm)
-		if (pm->getSource() == sources[0])
-			publisher[0]->publish(pm);
-		else 
-			publisher[1]->publish(pm)
-MyClient servier
-	getEventFrom(&networkHandler)
-	publishTo(&networkHandler1)
-	process event
-		publisher[0]->publish(pm)
-	
 
 Works
 -----------------------------------
@@ -99,7 +20,7 @@ Plan
 4. Write the same server using zeromq
 5. Perf test
 6. Write the same server im java
-7. Write the same server in Hasell
+7. Write the same server in Ocaml
 8. Write the same server in Erlang
 9. Class design for generic server and client
 10. Pub/sub feature design
@@ -123,6 +44,7 @@ Todo
 
 Referece
 -------------------------------
+EventLib:
 http://www.wangafu.net/~nickm/libevent-book/01_intro.html
 https://github.com/nitrogenlogic/cliserver/blob/master/cliserver.c
 
