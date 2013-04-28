@@ -67,8 +67,7 @@ public:
             perror("listen");
             return;
         }
-
-        pProcessor->parent = this;
+        setParent(pProcessor);
 
         event *e = event_new(m_ebase, listenerfd, EV_READ | EV_PERSIST,
                 acceptfn, (void*) pProcessor);
@@ -107,7 +106,7 @@ public:
 
         bufferevent_setcb(bev, readfn, NULL, errorfn, (void*) pProcessor);
         pProcessor->setContext((Context*) bev);
-        pProcessor->parent = this;
+        setParent(pProcessor);
         if (bufferevent_socket_connect(bev, (struct sockaddr *) &sin,
                 sizeof(sin)) < 0) {
             ERROR_OUT("Cannot bind to port %s", port);
@@ -162,7 +161,7 @@ void LibEventMain::errorfn(bufferevent *bev, short int error, void *arg) {
 
 void LibEventMain::acceptfn(int listener, short event, void *arg) {
     EventHandler *processor = (EventHandler*) arg;
-    LibEventMain *plevent = (LibEventMain*) processor->parent;
+    LibEventMain *plevent = (LibEventMain*) processor->getParent();
 
     sockaddr_storage ss;
     socklen_t slen = sizeof(ss);
