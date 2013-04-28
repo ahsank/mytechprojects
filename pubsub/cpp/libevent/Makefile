@@ -1,4 +1,4 @@
-CXXFLAGS=-g -I$$HOME/local/include -I../framework
+CXXFLAGS=-g -I$$HOME/local/include -I../framework -I../echotestlib
 CXX=g++
 LDFLAGS=-L$$HOME/local/lib
 LDLIBS=-levent
