@@ -8,128 +8,16 @@
 #include <iostream>
 #include <sys/time.h>
 #include <arpa/inet.h>
+#include "framework.h"
 
 
-unsigned int traceLevel = 0;
-
-// Behaves similarly to printf(...), but adds file, line, and function
-// information. I omit do ... while(0) because I always use curly braces in my
-// if statements.
-#define INFO_OUT(...) if (traceLevel){\
-printf("%s:%d: %s():\t", __FILE__, __LINE__, __FUNCTION__);\
-printf(__VA_ARGS__);\
-	fflush(stdout); \
-}
-
-// Behaves similarly to fprintf(stderr, ...), but adds file, line, and function
-// information.
-#define ERROR_OUT(...) {\
-fprintf(stderr, "\033[0;1m%s:%d: %s():\t", __FILE__, __LINE__, __FUNCTION__);\
-fprintf(stderr, __VA_ARGS__);\
-fprintf(stderr, "\e[0m");\
-	fflush(stderr); \
-}
-
-// Behaves similarly to perror(...), but supports printf formatting and prints
-// file, line, and function information.
-#define ERRNO_OUT(...) {\
-fprintf(stderr, "\033[0;1m%s:%d: %s():\t", __FILE__, __LINE__, __FUNCTION__);\
-fprintf(stderr, __VA_ARGS__);\
-fprintf(stderr, ": %d (%s)\e[0m\n", errno, strerror(errno));\
-	fflush(stderr);\
-}
-
-long int getTimeDiff(struct timeval *t2, struct timeval *t1)
-{
-    return (t2->tv_usec + 1000000 * t2->tv_sec) - (t1->tv_usec + 1000000 * t1->tv_sec);
-}
-
-void printCurrentTime()
-{
-    char buffer[30];
-    time_t curtime;
-    timeval currTime;
-
-    gettimeofday(&currTime, NULL);
-    curtime = currTime.tv_sec;
-    strftime(buffer, 30, "%m-%d-%Y  %T", localtime(&curtime));
-    printf("%s.%06ld\n", buffer, (long)currTime.tv_usec);
-}
-
-
-class Processor {
-
-public:
-
-	Processor() :
-			parent(NULL) {
-	}
-
-	virtual void initialize() {
-	}
-
-	virtual void process() {
-	}
-
-	virtual void enable() {
-	}
-
-	virtual ~Processor() {
-	}
-
-protected:
-
-	Processor *parent;
-	friend class LibEventMain;
-
-};
-
-
-
-struct Context;
 
 class LibEventMain;
 
-class LibEventHandler: public Processor {
-protected:
-	char *m_output;
-	size_t m_outputLength;
-	bool isMore;
-	Context *pContext;
-	const char *description;
-
-public:
-	LibEventHandler() :
-			m_output(NULL), m_outputLength(0), isMore(false), pContext(NULL), description(
-					"generic") {
-
-	}
-
-	const char *getDescription() {
-		return description;
-	}
-
-	void setContext(Context *pContext) {
-		this->pContext = pContext;
-	}
-
-	Context * getContext() {
-		return pContext;
-	}
-
-	void send(char *data, int len, bool iseof);
-
-	virtual void process(char *data, int length, bool iseof) = 0;
-
-	LibEventMain *getParent() {
-		return (LibEventMain*) this->parent;
-	}
-
-};
 
 const int max_buff = 32767;
 
-class LibEventMain: public Processor {
+class LibEventMain: public EventMain {
 protected:
 	event_base *m_ebase;
 
@@ -155,7 +43,7 @@ public:
 	static void readfn(bufferevent *bev, void *arg);
 	static void errorfn(bufferevent *bev, short error, void *arg);
 
-	void bindServer(const char *port, LibEventHandler *pProcessor) {
+	void bindServer(const char *port, EventHandler *pProcessor) {
 		sockaddr_in sin = { 0 };
 
 		sin.sin_family = AF_INET;
@@ -194,7 +82,7 @@ public:
 
 	}
 
-	void send(LibEventHandler *p, char *data, int len, bool isDataEnd) {
+	void send(EventHandler *p, char *data, int len, bool isDataEnd) {
 		if (!data || !len) {
 			return;
 		}
@@ -208,7 +96,7 @@ public:
 	}
 
 	void connectToServer(const char *address, const char *port,
-			LibEventHandler *pProcessor) {
+			EventHandler *pProcessor) {
 		sockaddr_in sin = { 0 };
 
 		sin.sin_family = AF_INET;
@@ -236,7 +124,7 @@ public:
 };
 
 void LibEventMain::readfn(bufferevent *bev, void *arg) {
-	LibEventHandler *p = (LibEventHandler *) arg;
+	EventHandler *p = (EventHandler *) arg;
 	INFO_OUT("Readfn %s:\n", (p ? p->getDescription() : "None") );
 	evbuffer *input, *output;
 
@@ -263,7 +151,7 @@ void LibEventMain::errorfn(bufferevent *bev, short int error, void *arg) {
 	if (error & BEV_EVENT_CONNECTED) {
 		bufferevent_setwatermark(bev, EV_READ, 0, max_buff);
 		bufferevent_enable(bev, EV_READ | EV_WRITE);
-		LibEventHandler *p = (LibEventHandler *) arg;
+		EventHandler *p = (EventHandler *) arg;
 		if (p) {
 			p->enable();
 		}
@@ -276,7 +164,7 @@ void LibEventMain::errorfn(bufferevent *bev, short int error, void *arg) {
 }
 
 void LibEventMain::acceptfn(int listener, short event, void *arg) {
-	LibEventHandler *processor = (LibEventHandler*) arg;
+	EventHandler *processor = (EventHandler*) arg;
 	LibEventMain *plevent = (LibEventMain*) processor->parent;
 
 	sockaddr_storage ss;
@@ -300,11 +188,9 @@ void LibEventMain::acceptfn(int listener, short event, void *arg) {
 
 }
 
-void LibEventHandler::send(char *data, int len, bool iseof) {
-	((LibEventMain*) this->parent)->send(this, data, len, iseof);
-}
 
-class LibEventEchoServer: public LibEventHandler {
+
+class LibEventEchoServer: public EventHandler {
 public:
 	LibEventEchoServer() {
 		description = "echo server";
@@ -315,7 +201,7 @@ public:
 	}
 };
 
-class LibEventEchoClient: public LibEventHandler {
+class LibEventEchoClient: public EventHandler {
 public:
 	int numGot;
 	int numSent;
@@ -363,41 +249,20 @@ public:
 };
 
 
-bool isClientOnly;
-bool isServerOnly;
-const char *pAddress = "127.0.0.1";
-const char *pPort = "8000";
-const char *opt = "csp:a:";
-
-void parseArgs(int argc, char **argv) {
-	int c;
-	while ((c = getopt(argc, argv, opt)) != -1) {
-		switch (c) {
-		case 'c': isClientOnly = true; break;
-		case 's': isServerOnly = true; break;
-		case 'p': pPort = optarg; break;
-		case 'a': pAddress = optarg; break;
-		default:
-			fprintf(stderr, "./eventserver [-cs] [-p port] [-a address]\n");
-			exit(1);
-
-		}
-	}
-}
-
 int main(int argc, char **argv) {
-	parseArgs(argc, argv);
 	LibEventMain mainProcessor;
 	LibEventEchoServer server;
 	LibEventEchoClient client(1000);
 	mainProcessor.initialize();
 	server.initialize();
 	client.initialize();
-	if (!isClientOnly) {
-		mainProcessor.bindServer(pPort, &server);
+	ArgParser argParser;
+	argParser.parseArgs(argc, argv);
+	if (!argParser.isClientOnly) {
+		mainProcessor.bindServer(argParser.pPort, &server);
 	}
-	if (!isServerOnly) {
-		mainProcessor.connectToServer(pAddress, pPort, &client);
+	if (!argParser.isServerOnly) {
+		mainProcessor.connectToServer(argParser.pAddress, argParser.pPort, &client);
 	}
 	mainProcessor.process();
 

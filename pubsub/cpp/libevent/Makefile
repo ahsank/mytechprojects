@@ -1,28 +1,22 @@
-CXXFLAGS=-g  -pg -I$$HOME/local/include
+CXXFLAGS=-g -I$$HOME/local/include -I../framework
 CXX=g++
 LDFLAGS=-L$$HOME/local/lib
 LDLIBS=-levent
 
 
-SRCS=eventserver.cpp selectserver.cpp
+SRCS=eventserver.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
-all: eventserver selectserver memcpyserver
+all: eventserver 
 
 eventserver: eventserver.o
 	g++ -L$$HOME/local/lib  -o eventserver eventserver.o -levent
 
-selectserver: selectserver.o
-	g++ -g -pg -o selectserver selectserver.o 
-
-memcpyserver: memcpyserver.o
-	g++ -o memcpyserver memcpyserver.o
- 
 depend: .depend
 
 .depend: $(SRCS)
 	rm -f ./.depend
-	$(CXX) $(CPPFLAGS) -MM $^>>./.depend;
+	$(CXX) $(CXXFLAGS) -MM $^>>./.depend;
 
 clean:
 	$(RM) $(OBJS)
