@@ -37,12 +37,12 @@ fprintf(stderr, ": %d (%s)\e[0m\n", errno, strerror(errno));\
     fflush(stderr);\
 }
 
-long int getTimeDiff(struct timeval *t2, struct timeval *t1)
+inline long int getTimeDiff(struct timeval *t2, struct timeval *t1)
 {
     return (t2->tv_usec + 1000000 * t2->tv_sec) - (t1->tv_usec + 1000000 * t1->tv_sec);
 }
 
-void printCurrentTime()
+inline void printCurrentTime()
 {
     char buffer[30];
     time_t curtime;
@@ -134,42 +134,7 @@ public:
 
 };
 
-void EventHandler::send(char *data, int len, bool iseof) {
+inline void EventHandler::send(char *data, int len, bool iseof) {
     ((EventMain*) this->parent)->send(this, data, len, iseof);
 }
-
-
-const char *opt = "csp:a:";
-
-class ArgParser {
-public:
-    bool isClientOnly;
-    bool isServerOnly;
-    const char *pAddress;
-    const char *pPort;
-    ArgParser() :
-        isClientOnly(false),
-        isServerOnly(false),
-        pAddress("127.0.0.1"),
-        pPort("8000") {
-
-    }
-    void parseArgs(int argc, char **argv) {
-        int c;
-        while ((c = getopt(argc, argv, opt)) != -1) {
-            switch (c) {
-            case 'c': isClientOnly = true; break;
-            case 's': isServerOnly = true; break;
-            case 'p': pPort = optarg; break;
-            case 'a': pAddress = optarg; break;
-            default:
-                fprintf(stderr, "./eventserver [-cs] [-p port] [-a address]\n");
-                exit(1);
-
-            }
-        }
-    }
-
-
-};
 

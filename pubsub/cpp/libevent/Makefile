@@ -1,4 +1,4 @@
-CXXFLAGS=-g -I$$HOME/local/include -I../framework -I../echotestlib
+CXXFLAGS=-g -I$$HOME/local/include -I../framework -I../echotestlib -DBUILDTEST
 CXX=g++
 LDFLAGS=-L$$HOME/local/lib
 LDLIBS=-levent
@@ -7,10 +7,10 @@ LDLIBS=-levent
 SRCS=eventserver.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
-all: eventserver 
+all: eventservertest
 
-eventserver: eventserver.o
-	g++ -L$$HOME/local/lib  -o eventserver eventserver.o -levent
+eventservertest: eventserver.o ../echotestlib/perftestmain.o
+	g++ -L$$HOME/local/lib  -o eventserver $^ -levent
 
 depend: .depend
 
