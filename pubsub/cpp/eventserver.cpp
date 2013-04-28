@@ -9,7 +9,6 @@
 #include <sys/time.h>
 #include <arpa/inet.h>
 
-#define assume(cond , err) if (!cond) {perror(err);}
 
 unsigned int traceLevel = 0;
 
@@ -57,12 +56,6 @@ void printCurrentTime()
     printf("%s.%06ld\n", buffer, currTime.tv_usec);
 }
 
-class Environment {
-public:
-	void logError(char *error);
-protected:
-
-};
 
 class Processor {
 
@@ -81,32 +74,23 @@ public:
 	virtual void enable() {
 	}
 
-	Environment &env() {
-		return this->environment;
-	}
 	virtual ~Processor() {
 	}
 
 protected:
 
-	Environment environment;
 	Processor *parent;
 	friend class LibEventMain;
 
 };
 
-struct ByteOut {
-	char *pData;
-	size_t len;
-	bool isMore;
-};
 
-struct Context {
-};
+
+struct Context;
 
 class LibEventMain;
 
-class LibEventServer: public Processor {
+class LibEventHandler: public Processor {
 protected:
 	char *m_output;
 	size_t m_outputLength;
@@ -115,7 +99,7 @@ protected:
 	const char *description;
 
 public:
-	LibEventServer() :
+	LibEventHandler() :
 			m_output(NULL), m_outputLength(0), isMore(false), pContext(NULL), description(
 					"generic") {
 
@@ -134,11 +118,6 @@ public:
 	}
 
 	void send(char *data, int len, bool iseof);
-
-	ByteOut getOutput() {
-		ByteOut output = { m_output, m_outputLength, isMore };
-		return output;
-	}
 
 	virtual void process(char *data, int length, bool iseof) = 0;
 
@@ -176,12 +155,11 @@ public:
 	static void readfn(bufferevent *bev, void *arg);
 	static void errorfn(bufferevent *bev, short error, void *arg);
 
-	void bindServer(unsigned short port, LibEventServer *pProcessor) {
+	void bindServer(const char *port, LibEventHandler *pProcessor) {
 		sockaddr_in sin = { 0 };
 
 		sin.sin_family = AF_INET;
-		//sin.sin_addr = 0;
-		sin.sin_port = htons(port);
+		sin.sin_port = htons(atoi(port));
 
 		int listenerfd = socket(AF_INET, SOCK_STREAM, 0);
 		if (listenerfd == -1) {
@@ -212,11 +190,11 @@ public:
 
 		event_add(e, NULL);
 
-		INFO_OUT("Bound to port:%d\n", port);
+		INFO_OUT("Bound to port:%s\n", port);
 
 	}
 
-	void send(LibEventServer *p, char *data, int len, bool isDataEnd) {
+	void send(LibEventHandler *p, char *data, int len, bool isDataEnd) {
 		if (!data || !len) {
 			return;
 		}
@@ -226,13 +204,11 @@ public:
 		}
 		bufferevent_write(bev, data, len);
 		//bufferevent_flush(bev, EV_WRITE, BEV_NORMAL);
-//		evbuffer *output = bufferevent_get_output(bev);
-//		evbuffer_add(output, data, len);
-//		evbuffer_
+
 	}
 
 	void connectToServer(const char *address, const char *port,
-			LibEventServer *pProcessor) {
+			LibEventHandler *pProcessor) {
 		sockaddr_in sin = { 0 };
 
 		sin.sin_family = AF_INET;
@@ -260,7 +236,7 @@ public:
 };
 
 void LibEventMain::readfn(bufferevent *bev, void *arg) {
-	LibEventServer *p = (LibEventServer *) arg;
+	LibEventHandler *p = (LibEventHandler *) arg;
 	INFO_OUT("Readfn %s:\n", (p ? p->getDescription() : "None") );
 	evbuffer *input, *output;
 
@@ -268,25 +244,17 @@ void LibEventMain::readfn(bufferevent *bev, void *arg) {
 	int i;
 
 	input = bufferevent_get_input(bev);
-	output = bufferevent_get_output(bev);
 
-//	size_t buffer_len = evbuffer_get_length(input);
-//
 	char buffer[max_buff];
-//
-//	if (buffer_len > max_buff) buffer_len = max_buff;
-//	buffer_len = evbuffer_copyout(input, buffer, buffer_len);
-//
-//	p->process(buffer, buffer_len);
+
 //
 //	char *data = evbuffer_readln(input, &n, EVBUFFER_EOL_LF);
 //	p->process(data, n, true);
 //	free(data);
-	while ((n = evbuffer_remove(input, buffer, sizeof(buffer))) > 0) {
+	if ((n = evbuffer_remove(input, buffer, sizeof(buffer))) > 0) {
 		p->process(buffer, n, !n);
 	}
 
-	// evbuffer_drain(input, buffer_len);
 	// Todo: What happens to the remaining buffer that is less than max_buff
 }
 
@@ -295,7 +263,7 @@ void LibEventMain::errorfn(bufferevent *bev, short int error, void *arg) {
 	if (error & BEV_EVENT_CONNECTED) {
 		bufferevent_setwatermark(bev, EV_READ, 0, max_buff);
 		bufferevent_enable(bev, EV_READ | EV_WRITE);
-		LibEventServer *p = (LibEventServer *) arg;
+		LibEventHandler *p = (LibEventHandler *) arg;
 		if (p) {
 			p->enable();
 		}
@@ -308,7 +276,7 @@ void LibEventMain::errorfn(bufferevent *bev, short int error, void *arg) {
 }
 
 void LibEventMain::acceptfn(int listener, short event, void *arg) {
-	LibEventServer *processor = (LibEventServer*) arg;
+	LibEventHandler *processor = (LibEventHandler*) arg;
 	LibEventMain *plevent = (LibEventMain*) processor->parent;
 
 	sockaddr_storage ss;
@@ -332,11 +300,11 @@ void LibEventMain::acceptfn(int listener, short event, void *arg) {
 
 }
 
-void LibEventServer::send(char *data, int len, bool iseof) {
+void LibEventHandler::send(char *data, int len, bool iseof) {
 	((LibEventMain*) this->parent)->send(this, data, len, iseof);
 }
 
-class LibEventEchoServer: public LibEventServer {
+class LibEventEchoServer: public LibEventHandler {
 public:
 	LibEventEchoServer() {
 		description = "echo server";
@@ -347,16 +315,15 @@ public:
 	}
 };
 
-class LibEventEchoClient: public LibEventServer {
+class LibEventEchoClient: public LibEventHandler {
 public:
 	int numGot;
 	int numSent;
-	int requiredInput;
+	int maxSend;
 	timeval beginTime;
-	LibEventServer *pCancel;
 
-	LibEventEchoClient(int nReq, LibEventServer *pDone) :
-			requiredInput(nReq), pCancel(pDone) {
+	LibEventEchoClient(int nReq) :
+		maxSend(nReq) {
 		numSent = numGot = 0;
 		description = "echo client";
 	}
@@ -368,41 +335,33 @@ public:
 			printCurrentTime();
 		    gettimeofday(&beginTime, NULL);
 		}
-		if (numGot == requiredInput) {
+		if (numGot == maxSend) {
 			timeval endTime;
 			gettimeofday(&endTime, NULL);
 			printCurrentTime();
 			unsigned long timediff = getTimeDiff(&endTime, &beginTime);
-			printf("Number of message %d, usec %ld, Number of message per sec %ld\n", requiredInput,
-					timediff, requiredInput*1000000UL / (timediff ? timediff : 1));
+			printf("Number of message %d, usec %ld, Number of message per sec %ld\n", maxSend,
+					timediff, maxSend*1000000UL / (timediff ? timediff : 1));
 
 			getParent()->cancelLoop();
 			return;
 		}
-		static char buffer[1024] = "Hello world!\n";
+		static char buffer[] = "Hello world!\n";
 		INFO_OUT("Sending data %d\n", numSent);
-		send(buffer, strlen(buffer) + 1, true);
+		send(buffer, sizeof(buffer), true);
 		numSent++;
 	}
 
 	virtual void enable() {
 		INFO_OUT("Echo client enabled\n");
-		static char buffer[1024] = "Hello world!\n";
+		static char buffer[] = "Hello world!\n";
 		INFO_OUT("Sending data %d\n", numSent);
-		send(buffer, strlen(buffer) + 1, true);
+		send(buffer, sizeof(buffer), true);
 		numSent++;
 
 	}
 };
 
-class LibEventCancel: public LibEventServer {
-	virtual void process(char *data, int len, bool iseof) {
-		if (iseof) {
-
-			getParent()->cancelLoop();
-		}
-	}
-};
 
 bool isClientOnly;
 bool isServerOnly;
@@ -430,12 +389,12 @@ int main(int argc, char **argv) {
 	parseArgs(argc, argv);
 	LibEventMain mainProcessor;
 	LibEventEchoServer server;
-	LibEventEchoClient client(1000, NULL);
+	LibEventEchoClient client(1000);
 	mainProcessor.initialize();
 	server.initialize();
 	client.initialize();
 	if (!isClientOnly) {
-		mainProcessor.bindServer(8000, &server);
+		mainProcessor.bindServer(pPort, &server);
 	}
 	if (!isServerOnly) {
 		mainProcessor.connectToServer(pAddress, pPort, &client);
