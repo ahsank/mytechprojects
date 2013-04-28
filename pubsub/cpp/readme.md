@@ -1,5 +1,25 @@
+Result
+--------------------------------------
 
-	
+- Client sends a message to server and sends next message after getting response
+
+Measured in Intel core i7
+
+<pre>
+
+Method          | OS            | Process       | Messages /sec
+livevent        | OS X          | Same          | 29K
+                |               | Different     | 28K 
+                | Linux VM      | Same          | 54 K
+                |               | Different     | 12K
+Select          | OS X          | Same          | 39K
+                |               | Different     | 41K
+                | Linux VM      | Same          | 68K
+                |               | Different     | 15K
+memcpy          | OS X          | Same          | 11M
+
+</pre>
+
 Plan
 ------------------------------------
 1. Write a C kpoll server
@@ -32,6 +52,8 @@ Plan
 	10. Authn/Authz
 	11. Object based routing
 	l2. 
+11. Write using blocking socket and lots of threads.
+
 
 Future
 --------------------------------
@@ -46,4 +68,6 @@ Referece
 http://www.wangafu.net/~nickm/libevent-book/01_intro.html
 
 https://github.com/nitrogenlogic/cliserver/blob/master/cliserver.c
+https://idea.popcount.org/2012-09-11-concurrent-queue-in-c/
+
 
