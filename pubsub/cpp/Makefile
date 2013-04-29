@@ -5,6 +5,7 @@ LDLIBS=-levent
 
 all : eventserver
 
+<<<<<<< HEAD
 SRCS=eventserver.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
@@ -18,6 +19,10 @@ depend: .depend
 .depend: $(SRCS)
 	rm -f ./.depend
 	$(CXX) $(CPPFLAGS) -MM $^>>./.depend;
+=======
+eventserver : eventserver.cpp
+	g++ -O3 eventserver.cpp -o eventserver -levent
+>>>>>>> 280ab903daacc9dd42b9301470cb2767cbecd4a6
 
 clean:
 	$(RM) $(OBJS)
