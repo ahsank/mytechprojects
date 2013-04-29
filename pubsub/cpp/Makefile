@@ -1,7 +1,34 @@
+CXXFLAGS=-g -I$$HOME/local/include
+CXX=g++
+LDFLAGS=-L$$HOME/local/lib
+LDLIBS=-levent
+
 all : eventserver
 
-eventserver : eventserver.cpp
-	g++ -ggdb eventserver.cpp -o eventserver -levent
+SRCS=eventserver.cpp
+OBJS=$(subst .cpp,.o,$(SRCS))
+
+all: eventserver
+
+eventserver: $(OBJS)
+	g++ $(LDFLAGS) -o eventserver $(OBJS) $(LDLIBS)
+
+depend: .depend
+
+.depend: $(SRCS)
+	rm -f ./.depend
+	$(CXX) $(CPPFLAGS) -MM $^>>./.depend;
 
 clean:
-	rm eventserver
+	$(RM) $(OBJS)
+
+dist-clean: clean
+	$(RM) *~ .dependtool
+
+include .depend
+
+# Mac OSX
+# export DYLD_LIBRARY_PATH=/Users/ahsan/local/lib
+# before run
+
+

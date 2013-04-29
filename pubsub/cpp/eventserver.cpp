@@ -54,7 +54,7 @@ void printCurrentTime()
     gettimeofday(&currTime, NULL);
     curtime = currTime.tv_sec;
     strftime(buffer, 30, "%m-%d-%Y  %T", localtime(&curtime));
-    printf("%s.%06ld\n", buffer, currTime.tv_usec);
+    printf("%s.%06ld\n", buffer, (long)currTime.tv_usec);
 }
 
 class Environment {
