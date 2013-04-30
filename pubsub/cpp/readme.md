@@ -1,3 +1,9 @@
+Result
+--------------------------------------
+Client and server running in the same process in Intel core i7 Mac OSX.
+
+- Single threaded libEvent server and client: 29K messages/sec.
+- Single threaded select based server and client: 39K messages/sec.
 
 	
 Plan
@@ -32,6 +38,8 @@ Plan
 	10. Authn/Authz
 	11. Object based routing
 	l2. 
+11. Write using blocking socket and lots of threads.
+
 
 Future
 --------------------------------

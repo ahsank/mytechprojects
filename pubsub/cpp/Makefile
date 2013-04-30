@@ -5,13 +5,16 @@ LDLIBS=-levent
 
 all : eventserver
 
-SRCS=eventserver.cpp
+SRCS=eventserver.cpp selectserver.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
-all: eventserver
+all: eventserver selectserver
 
-eventserver: $(OBJS)
-	g++ $(LDFLAGS) -o eventserver $(OBJS) $(LDLIBS)
+eventserver: eventserver.o
+	g++ -L$$HOME/local/lib  -o eventserver eventserver.o -levent
+
+selectserver: selectserver.o
+	g++ -o selectserver selectserver.o 
 
 depend: .depend
 
