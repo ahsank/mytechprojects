@@ -1,4 +1,4 @@
-CXXFLAGS=-g -O3 -I$$HOME/local/include
+CXXFLAGS=-g -I$$HOME/local/include
 CXX=g++
 LDFLAGS=-L$$HOME/local/lib
 LDLIBS=-levent

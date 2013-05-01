@@ -1,9 +1,15 @@
 Result
 --------------------------------------
-Client and server running in the same process in Intel core i7 Mac OSX.
 
-- Single threaded libEvent server and client: 29K messages/sec.
-- Single threaded select based server and client: 39K messages/sec.
+Measured in Intel core i& Mac OSX
+
+- Client send message to server and sends next message after getting response
+- Client and server running in the same process
+	- Single threaded libEvent server and client: 29K messages/sec.
+	- Single threaded select based server and client: 39K messages/sec.
+- Client and server running in different process
+	- Single threaded libEvent server and client: 28K messages/sec
+	- Single threaded select based server and client: 41K messages/sec
 
 	
 Plan

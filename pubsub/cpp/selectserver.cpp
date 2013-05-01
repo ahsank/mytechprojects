@@ -211,7 +211,7 @@ public:
                 return;
             }
             INFO_OUT("selected %d sockets", numResult);
-            if (FD_ISSET(listener, &readset)) {
+            if (listener != -1 && FD_ISSET(listener, &readset)) {
                 struct sockaddr_storage ss;
                 socklen_t slen = sizeof(ss);
                 int fd = accept(listener, (struct sockaddr*)&ss, &slen);
@@ -243,8 +243,12 @@ public:
                     while(1) {
                         INFO_OUT("Reading socket %d", i);
                         result = recv(i, buf, sizeof(buf), 0);
-                        if (result <= 0) {
+                        if (result < 0) {
                             perror("recv");
+                            break;
+                        }
+                        else if (result == 0) {
+                            break;
                         }
                         if (states[i] && states[i]->handler) {
                             states[i]->handler->setContext((Context*)i);
