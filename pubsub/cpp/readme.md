@@ -3,18 +3,19 @@ Result
 
 - Client sends a message to server and sends next message after getting response
 
-Measured in Intel core i& Mac OSX
+Measured in Intel core i7
+
 <pre>
 
-Method		| OS		| Process	| Messages /sec
-livevent	| OS X     	| Same		| 29K
-         	| 		| Different	| 28K 
-		| Linux VM 	| Same      	| 54 K
-  		|		| Different	| 12K
-Selet		| OS X		| Same		| 39K
-		|		| Different	| 41K
-		| Linux VM	| Same		| 68K
-		|		| Different	| 15K
+Method          | OS            | Process       | Messages /sec
+livevent        | OS X          | Same          | 29K
+                |               | Different     | 28K 
+                | Linux VM      | Same          | 54 K
+                |               | Different     | 12K
+Select          | OS X          | Same          | 39K
+                |               | Different     | 41K
+                | Linux VM      | Same          | 68K
+                |               | Different     | 15K
 </pre>
 
 Plan
