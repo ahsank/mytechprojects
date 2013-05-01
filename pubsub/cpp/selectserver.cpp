@@ -54,7 +54,7 @@ void printCurrentTime()
     char buffer[30];
     time_t curtime;
     timeval currTime;
-    
+
     gettimeofday(&currTime, NULL);
     curtime = currTime.tv_sec;
     strftime(buffer, 30, "%m-%d-%Y  %T", localtime(&curtime));
@@ -63,30 +63,30 @@ void printCurrentTime()
 
 
 class Processor {
-    
+
 public:
-    
+
 	Processor() :
     parent(NULL) {
 	}
-    
+
 	virtual void initialize() {
 	}
-    
+
 	virtual void process() {
 	}
-    
+
 	virtual void enable() {
 	}
-    
+
 	virtual ~Processor() {
 	}
-    
+
 protected:
-    
+
 	Processor *parent;
 	friend class SelectMain;
-    
+
 };
 
 
@@ -102,34 +102,34 @@ protected:
 	bool isMore;
 	Context *pContext;
 	const char *description;
-    
+
 public:
 	SelectHandler() :
     m_output(NULL), m_outputLength(0), isMore(false), pContext(NULL),
     description(
                 "generic") {
 	}
-    
+
 	const char *getDescription() {
 		return description;
 	}
-    
+
 	void setContext(Context *pContext) {
 		this->pContext = pContext;
 	}
-    
+
 	Context * getContext() {
 		return pContext;
 	}
-    
+
 	void send(char *data, int len, bool iseof);
-    
+
 	virtual void process(char *data, int length, bool iseof) = 0;
-    
+
 	SelectMain *getParent() {
 		return (SelectMain*) this->parent;
 	}
-    
+
 };
 
 const int max_buff = 32767;
@@ -140,20 +140,20 @@ struct ClientState {
 
 class SelectMain: public Processor {
 protected:
-    
+
 	int listener;
     int dest;
     SelectHandler *server;
     SelectHandler *client;
     bool loopEnd;
 	ClientState *pStates;
-    
+
 public:
-    
+
 	void initialize() {
         loopEnd = false;
         dest = listener = -1;
-        
+
 	}
 	void process() {
         struct ClientState *states[FD_SETSIZE];
@@ -161,7 +161,7 @@ public:
         fd_set readset, writeset, exset;
 		for (int i = 0; i < FD_SETSIZE; ++i)
             states[i] = NULL;
-        
+
         FD_ZERO(&readset);
         FD_ZERO(&writeset);
         FD_ZERO(&exset);
@@ -184,13 +184,13 @@ public:
         }
         INFO_OUT("Listening socket %d", listener);
         INFO_OUT("Connected socket %d", dest);
-        
+
 		while (!loopEnd) {
-            
+
             FD_ZERO(&readset);
             FD_ZERO(&writeset);
             FD_ZERO(&exset);
-            
+
             if (listener != -1) {
                 FD_SET(listener, &readset);
             }
@@ -226,20 +226,20 @@ public:
                     state->handler = server;
                     states[fd] = state;
                     INFO_OUT("Accepted socket %d", fd);
-                    
+
                 }
-                
+
         	}
-            
+
         	for (int i=0; i < maxfd+1; ++i) {
                 int r = 0;
                 if (i == listener)
                     continue;
-                
+
                 if (FD_ISSET(i, &readset)) {
                     char buf[1024];
                     ssize_t result;
-                    
+
                     while(1) {
                         INFO_OUT("Reading socket %d", i);
                         result = recv(i, buf, sizeof(buf), 0);
@@ -251,14 +251,14 @@ public:
                             break;
                         }
                         if (states[i] && states[i]->handler) {
-                            states[i]->handler->setContext((Context*)i);
+                            states[i]->handler->setContext((Context*)(long)i);
                             states[i]->handler->process(buf, result, true);
                         }
                         break;
-                        
+
                     }
                     r = (result == 0) || (result < 0 && result != EAGAIN);
-                    
+
                 }
                 //if (r == 0 && FD_ISSET(i, &writeset)) {
                 //r = do_write(i, state[i]);
@@ -270,22 +270,22 @@ public:
                     close(i);
             	}
             }
-            
+
         }
     }
-    
-    
+
+
     void cancelLoop() {
         loopEnd = true;
     }
-    
+
     void bindServer(const char *port, SelectHandler *pProcessor) {
         struct sockaddr_in sin = {0};
-        
+
         sin.sin_family = AF_INET;
         sin.sin_addr.s_addr = 0;
         sin.sin_port = htons(atoi(port));
-        
+
         listener = socket(AF_INET, SOCK_STREAM, 0);
         this->server = pProcessor;
         pProcessor->parent = this;
@@ -303,7 +303,7 @@ public:
         }
         INFO_OUT("Listenning to port %s", port);
     }
-    
+
     void send(SelectHandler *p, char *data, int len, bool isDataEnd) {
         if (!p) {
             INFO_OUT("Invalid context");
@@ -313,13 +313,13 @@ public:
             perror("send");
         }
         INFO_OUT("Done sending");
-        
+
     }
-    
+
     void connectToServer(const char *address, const char *port,
                          SelectHandler *pProcessor) {
         sockaddr_in sin = { 0 };
-        
+
         sin.sin_family = AF_INET;
         sin.sin_port = htons(atoi(port));
         inet_pton(AF_INET, address, &(sin.sin_addr));
@@ -331,15 +331,15 @@ public:
             return;
         }
         pProcessor->parent = this;
-        pProcessor->setContext((Context*)dest);
+        pProcessor->setContext((Context*)(long)dest);
         fcntl(dest, F_SETFL, O_NONBLOCK);
         pProcessor->enable();
-        
+
         // Investigate: should set reuse address ?
-        
-        
+
+
     }
-    
+
 };
 
 
@@ -364,13 +364,13 @@ public:
     int numSent;
     int maxSend;
     timeval beginTime;
-    
+
     LibEventEchoClient(int nReq) :
     maxSend(nReq) {
         numSent = numGot = 0;
         description = "echo client";
     }
-    
+
     virtual void process(char *data, int len, bool iseof) {
         numGot++;
         INFO_OUT("Client process response %d", numGot);
@@ -385,7 +385,7 @@ public:
             unsigned long timediff = getTimeDiff(&endTime, &beginTime);
             printf("Number of message %d, usec %ld, Number of message per sec %ld\n", maxSend,
                    timediff, maxSend*1000000UL / (timediff ? timediff : 1));
-            
+
             getParent()->cancelLoop();
             return;
         }
@@ -394,14 +394,14 @@ public:
         send(buffer, sizeof(buffer), true);
         numSent++;
     }
-    
+
     virtual void enable() {
         INFO_OUT("Echo client enabled");
         static char buffer[] = "Hello world!";
         INFO_OUT("Sending data %d", numSent);
         send(buffer, sizeof(buffer), true);
         numSent++;
-        
+
     }
 };
 
@@ -423,7 +423,7 @@ void parseArgs(int argc, char **argv) {
             default:
                 fprintf(stderr, "./eventserver [-cs] [-p port] [-a address]\n");
                 exit(1);
-                
+
         }
     }
 }
@@ -443,6 +443,6 @@ int main(int argc, char **argv) {
         mainProcessor.connectToServer(pAddress, pPort, &client);
     }
     mainProcessor.process();
-    
+
 }
 

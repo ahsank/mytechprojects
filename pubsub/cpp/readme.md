@@ -1,17 +1,21 @@
 Result
 --------------------------------------
 
+- Client sends a message to server and sends next message after getting response
+
 Measured in Intel core i& Mac OSX
 
-- Client send message to server and sends next message after getting response
-- Client and server running in the same process
-	- Single threaded libEvent server and client: 29K messages/sec.
-	- Single threaded select based server and client: 39K messages/sec.
-- Client and server running in different process
-	- Single threaded libEvent server and client: 28K messages/sec
-	- Single threaded select based server and client: 41K messages/sec
+Method		| OS		| Process	| Messages /sec
+livevent	| OS X     	| Same		| 29K
+         	| 		| Different	| 28K 
+		| Linux VM 	| Same      	| 54 K
+  		|		| Different	| 12K
+Selet		| OS X		| Same		| 39K
+		|		| Different	| 41K
+		| Linux VM	| Same		| 68K
+		|		| Different	| 15K
 
-	
+
 Plan
 ------------------------------------
 1. Write a C kpoll server
@@ -60,4 +64,6 @@ Referece
 http://www.wangafu.net/~nickm/libevent-book/01_intro.html
 
 https://github.com/nitrogenlogic/cliserver/blob/master/cliserver.c
+https://idea.popcount.org/2012-09-11-concurrent-queue-in-c/
+
 
