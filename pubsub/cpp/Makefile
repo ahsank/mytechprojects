@@ -3,12 +3,11 @@ CXX=g++
 LDFLAGS=-L$$HOME/local/lib
 LDLIBS=-levent
 
-all : eventserver
 
 SRCS=eventserver.cpp selectserver.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
-all: eventserver selectserver
+all: eventserver selectserver memcpyserver
 
 eventserver: eventserver.o
 	g++ -L$$HOME/local/lib  -o eventserver eventserver.o -levent
@@ -16,6 +15,9 @@ eventserver: eventserver.o
 selectserver: selectserver.o
 	g++ -o selectserver selectserver.o 
 
+memcpyserver: memcpyserver.o
+	g++ -o memcpyserver memcpyserver.o
+ 
 depend: .depend
 
 .depend: $(SRCS)

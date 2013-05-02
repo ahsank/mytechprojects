@@ -16,6 +16,8 @@ Select          | OS X          | Same          | 39K
                 |               | Different     | 41K
                 | Linux VM      | Same          | 68K
                 |               | Different     | 15K
+memcpy          | OS X          | Same          | 11M
+
 </pre>
 
 Plan
