@@ -1,4 +1,4 @@
-CXXFLAGS=-g -I$$HOME/local/include
+CXXFLAGS=-g  -pg -I$$HOME/local/include
 CXX=g++
 LDFLAGS=-L$$HOME/local/lib
 LDLIBS=-levent
@@ -13,7 +13,7 @@ eventserver: eventserver.o
 	g++ -L$$HOME/local/lib  -o eventserver eventserver.o -levent
 
 selectserver: selectserver.o
-	g++ -o selectserver selectserver.o 
+	g++ -g -pg -o selectserver selectserver.o 
 
 memcpyserver: memcpyserver.o
 	g++ -o memcpyserver memcpyserver.o
