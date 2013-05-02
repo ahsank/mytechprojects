@@ -155,7 +155,20 @@ public:
         dest = listener = -1;
 
 	}
+    void buildfds(ClientState **
+                  states, int *fds, int *pnumfds) {
+        int numfds = 0;
+        for(int i=0; i < FD_SETSIZE; i++) {
+            if (!states[i]) continue;
+            fds[numfds++] = i;
+        }
+        *pnumfds = numfds;
+        
+    }
+    
 	void process() {
+        int fds[FD_SETSIZE];
+        int numfds =0;
         struct ClientState *states[FD_SETSIZE];
 		int maxfd;
         fd_set readset, writeset, exset;
@@ -182,6 +195,8 @@ public:
             }
             FD_SET(i, &readset);
         }
+        buildfds(states, fds, &numfds);
+        
         INFO_OUT("Listening socket %d", listener);
         INFO_OUT("Connected socket %d", dest);
 
@@ -195,16 +210,13 @@ public:
                 FD_SET(listener, &readset);
             }
             maxfd = listener;
-            int numSocket = 1;
-            for(int i=0; i < FD_SETSIZE; i++) {
-                if (!states[i]) continue;
-                if (i > maxfd) {
-                    maxfd = i;
+            for(int i=0; i < numfds; i++) {
+                if (fds[i] > maxfd) {
+                    maxfd = fds[i];
                 }
-                FD_SET(i, &readset);
-                numSocket++;
+                FD_SET(fds[i], &readset);
             }
-            INFO_OUT("slecting %d sockets", numSocket);
+            INFO_OUT("slecting %d sockets", numfds);
             int numResult;
 			if ((numResult = select(maxfd+1, &readset, NULL, NULL, NULL)) < 0) {
                 perror("select");
@@ -225,6 +237,7 @@ public:
                     assert(state);
                     state->handler = server;
                     states[fd] = state;
+                    fds[numfds++] = fd;
                     INFO_OUT("Accepted socket %d", fd);
 
                 }
@@ -268,6 +281,7 @@ public:
                     free(states[i]);
                     states[i] = NULL;
                     close(i);
+                    buildfds(states, fds, &numfds);
             	}
             }
 
