@@ -432,7 +432,7 @@ int main(int argc, char **argv) {
     parseArgs(argc, argv);
     SelectMain mainProcessor;
     LibEventEchoServer server;
-    LibEventEchoClient client(1000);
+    LibEventEchoClient client(10000);
     mainProcessor.initialize();
     server.initialize();
     client.initialize();
