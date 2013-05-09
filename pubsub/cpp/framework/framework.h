@@ -78,7 +78,7 @@ public:
 protected:
 
     Processor *parent;
-    friend class LibEventMain;
+    friend class EventMain;
 
 };
 
@@ -131,6 +131,9 @@ public:
     virtual void send(EventHandler *p, char *data, int len, bool isDataEnd) = 0;
     virtual void connectToServer(const char *address, const char *port,
             EventHandler *pProcessor) = 0;
+    void setParent(EventHandler *pProcessor) {
+        pProcessor->parent = this;
+    }
 
 };
 

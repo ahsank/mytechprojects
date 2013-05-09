@@ -4,13 +4,13 @@ LDFLAGS=-L$$HOME/local/lib
 LDLIBS=-levent
 
 
-SRCS=memcpyserver.cpp
+SRCS=epollserver.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
-all: memcpyservertest
+all: epollservertest
 
-memcpyservertest: memcpyserver.o ../echotestlib/perftestmain.o
-	g++ -L$$HOME/local/lib  -o memcpyservertest $^ 
+epollservertest: epollserver.o ../echotestlib/perftestmain.o
+	g++ -L$$HOME/local/lib  -o epollservertest $^
 
 depend: .depend
 
@@ -19,7 +19,7 @@ depend: .depend
 	$(CXX) $(CXXFLAGS) -MM $^>>./.depend;
 
 clean:
-	$(RM) $(OBJS) memcpyservertest
+	$(RM) $(OBJS) epollservertest
 
 dist-clean: clean
 	$(RM) *~ .dependtool
