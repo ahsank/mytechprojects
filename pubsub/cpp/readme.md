@@ -15,6 +15,8 @@ livevent  | Y       | 29K
 Select    | Y       | 39K
           | N       | 41K
 memcpy    | Y       | 11M
+kevent    | Y       | 42K
+          | N      
 </pre>
 
 Inside a linux VM in Parallells desktop running in OSX

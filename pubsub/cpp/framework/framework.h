@@ -7,8 +7,10 @@
 #include <sys/time.h>
 #include <arpa/inet.h>
 
+#ifndef traceLevel
+#define traceLevel 0
+#endif
 
-const unsigned int traceLevel = 0;
 
 // Behaves similarly to printf(...), but adds file, line, and function
 // information. I omit do ... while(0) because I always use curly braces in my
@@ -16,6 +18,7 @@ const unsigned int traceLevel = 0;
 #define INFO_OUT(...) if (traceLevel){\
 printf("%s:%d: %s():\t", __FILE__, __LINE__, __FUNCTION__);\
 printf(__VA_ARGS__);\
+putc('\n', stdout); \
     fflush(stdout); \
 }
 
