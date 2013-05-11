@@ -23,9 +23,9 @@ Inside a linux VM in Parallells desktop running in OSX
             Same
 Method    | Process | Messages /sec
 -----------------------------------------------
-          | Y       | 54 K
+libevent  | Y       | 54 K
           | N       | 12K
-          | Y       | 68K
+select    | Y       | 68K
           | N       | 15K
 epoll     | Y       | 111K
           | N       | 15K
