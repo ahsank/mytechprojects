@@ -6,17 +6,20 @@ Result
 Measured in Intel core i7
 
 <pre>
-
-Method          | OS            | Process       | Messages /sec
-livevent        | OS X          | Same          | 29K
-                |               | Different     | 28K 
-                | Linux VM      | Same          | 54 K
-                |               | Different     | 12K
-Select          | OS X          | Same          | 39K
-                |               | Different     | 41K
-                | Linux VM      | Same          | 68K
-                |               | Different     | 15K
-memcpy          | OS X          | Same          | 11M
+                       Same
+Method    | OS       | Process | Messages /sec
+-----------------------------------------------
+livevent  | OS X     | Y       | 29K
+          |          | N       | 28K 
+          | Linux VM | Y       | 54 K
+          |          | N       | 12K
+Select    | OS X     | Y       | 39K
+          |          | N       | 41K
+          | Linux VM | Y       | 68K
+          |          | N       | 15K
+memcpy    | OS X     | Y       | 11M
+epoll     | Linux VM | Y       | 111K
+                     | N       | 15K
 
 </pre>
 
@@ -32,7 +35,7 @@ Plan
 - [ ] Unit tests
 - [ ] Check whether memory leak
 - [ ] Test performance on non virtual machine
-	
+
 4. Write the same server using zeromq
 5. Perf test
 6. Write the same server im java
@@ -40,18 +43,18 @@ Plan
 8. Write the same server in Erlang
 9. Class design for generic server and client
 10. Pub/sub feature design
-	1. Reliable
-	2. multicast
-	3. flow control
-	4. Last value
-	5. Transactional
-	6. Large number of nodes
-	7. POint to point
-	8. Broker based
-	9. Topic based subscribing
-	10. Authn/Authz
-	11. Object based routing
-	l2. 
+   1. Reliable
+   2. multicast
+   3. flow control
+   4. Last value
+   5. Transactional
+   6. Large number of nodes
+   7. POint to point
+   8. Broker based
+   9. Topic based subscribing
+   10. Authn/Authz
+   11. Object based routing
+   l2. 
 11. Write using blocking socket and lots of threads.
 
 
