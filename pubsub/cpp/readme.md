@@ -5,22 +5,30 @@ Result
 
 Measured in Intel core i7
 
+In an Mac OSX machine
 <pre>
-                       Same
-Method    | OS       | Process | Messages /sec
+            Same
+Method    | Process | Messages /sec
 -----------------------------------------------
-livevent  | OS X     | Y       | 29K
-          |          | N       | 28K 
-          | Linux VM | Y       | 54 K
-          |          | N       | 12K
-Select    | OS X     | Y       | 39K
-          |          | N       | 41K
-          | Linux VM | Y       | 68K
-          |          | N       | 15K
-memcpy    | OS X     | Y       | 11M
-epoll     | Linux VM | Y       | 111K
-                     | N       | 15K
+livevent  | Y       | 29K
+          | N       | 28K 
+Select    | Y       | 39K
+          | N       | 41K
+memcpy    | Y       | 11M
+</pre>
 
+Inside a linux VM in Parallells desktop running in OSX
+
+<pre>
+            Same
+Method    | Process | Messages /sec
+-----------------------------------------------
+          | Y       | 54 K
+          | N       | 12K
+          | Y       | 68K
+          | N       | 15K
+epoll     | Y       | 111K
+          | N       | 15K
 </pre>
 
 Plan
