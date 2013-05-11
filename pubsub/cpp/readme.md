@@ -27,6 +27,7 @@ libevent  | Y       | 54 K
           | N       | 12K
 select    | Y       | 68K
           | N       | 15K
+memcpy    | Y       | 18M
 epoll     | Y       | 111K
           | N       | 15K
 </pre>
