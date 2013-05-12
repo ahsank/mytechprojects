@@ -33,7 +33,8 @@ public:
     struct MyContext {
         int fd;
         sockaddr_in dest;
-    }
+    };
+
     struct MyEventData {
         int fd;
         EventHandler *pHandler;
@@ -52,7 +53,7 @@ public:
             exit(1);
         }
         if (this->listener != -1) {
-            MyEventData data = {listener, NULL};
+            MyEventData data = {listener, server};
             event.data.ptr = new MyEventData(data);
             event.events = EPOLLIN;
             if (epoll_ctl(efd, EPOLL_CTL_ADD, listener, &event) == -1) {
@@ -86,20 +87,24 @@ public:
                 INFO_OUT("Reading socket %d", i);
                 char buf[1024];
                 struct sockaddr_in si_from;
-                int slen = sizeof(si_from);
+                unsigned int slen = sizeof(si_from);
                 ssize_t  result = recvfrom(data->fd, buf, sizeof(buf), 0,
-                                           &si_from, &slen );
+                                           (sockaddr*)&si_from, &slen );
+                INFO_OUT("Done reading socket");
                 if (result < 0) {
+                	INFO_OUT("Read error");
                     perror("recv");
                     close(data->fd);
                     delete data;
                     continue;
                 } else if (result == 0) {
+                	INFO_OUT("Closing socket %d", i);
                     close(data->fd);
                     delete data;
                     break;
                 }
                 if (data->pHandler) {
+                	INFO_OUT("Before process");
                     MyContext fromcontext = {data->fd, si_from};
                     data->pHandler->setContext((Context*) &fromcontext);
                     data->pHandler->process(buf, result, true);
@@ -136,33 +141,34 @@ public:
 
     void send(EventHandler *p, char *data, int len, bool isDataEnd) {
         MyContext *pContext;
-        if (!p | !(pContext =p->getContext())) {
+        if (!p | !(pContext = (MyContext*) p->getContext())) {
             INFO_OUT("Invalid context");
             return;
         }
-        
-        if (::sendto((pContext->fd, data, len, &pContext->dest,
+        INFO_OUT("Sending data to %d", pContext->fd);
+        if (::sendto(pContext->fd, data, len, 0, (sockaddr*)&pContext->dest,
                       sizeof(pContext->dest)) == -1) {
             perror("send");
         }
         INFO_OUT("Done sending");
 
     }
-    
+
     void connectToServer(const char *address, const char *port,
             EventHandler *pProcessor) {
         sockaddr_in sin = { 0 };
-        MyContext pContext = new MyContext;
+        MyContext context;
 
         sin.sin_family = AF_INET;
         sin.sin_port = htons(atoi(port));
         inet_pton(AF_INET, address, &(sin.sin_addr));
-        sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-        pContext->dest = sin;
-        pContext->fd = sockfd;
+        int sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        context.dest = sin;
+        context.fd = sockfd;
         this->client = pProcessor;
+        this->dest = sockfd;
         setParent(pProcessor);
-        pProcessor->setContext((Context*) (void*) pContext);
+        pProcessor->setContext((Context*) (void*) &context);
         fcntl(dest, F_SETFL, O_NONBLOCK);
         pProcessor->enable();
 

@@ -9,14 +9,18 @@ In an Mac OSX machine
 <pre>
             Same
 Method    | Process | Messages /sec
------------------------------------------------
+-----------------------------------
 livevent  | Y       | 29K
           | N       | 28K 
+-----------------------------------
 Select    | Y       | 39K
           | N       | 41K
+----------------------------------
 memcpy    | Y       | 11M
+----------------------------------
 kevent    | Y       | 42K
-          | N      
+          | N       |             
+----------------------------------
 </pre>
 
 Inside a linux VM in Parallells desktop running in OSX
@@ -24,14 +28,22 @@ Inside a linux VM in Parallells desktop running in OSX
 <pre>
             Same
 Method    | Process | Messages /sec
------------------------------------------------
+-----------------------------------
 libevent  | Y       | 54 K
           | N       | 12K
+----------------------------------
 select    | Y       | 68K
           | N       | 15K
+----------------------------------
 memcpy    | Y       | 18M
+----------------------------------
 epoll     | Y       | 111K
           | N       | 15K
+---------------------------------
+epoll udp | Y       | 165K
+          | N       | 16K
+--------------------------------
+
 </pre>
 
 Plan
