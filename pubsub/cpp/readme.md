@@ -1,4 +1,4 @@
-Result
+Results
 --------------------------------------
 
 - Client sends a message to server and sends next message after getting response
@@ -19,8 +19,12 @@ Select    | Y       | 39K
 memcpy    | Y       | 11M
 ----------------------------------
 kevent    | Y       | 42K
-          | N       |             
+          | N       | 44K            
 ----------------------------------
+udp kevent| Y       | 38K
+          | N       | 35K
+----------------------------------
+
 </pre>
 
 Inside a linux VM in Parallells desktop running in OSX
@@ -40,7 +44,7 @@ memcpy    | Y       | 18M
 epoll     | Y       | 111K
           | N       | 15K
 ---------------------------------
-epoll udp | Y       | 165K
+udp epoll | Y       | 165K
           | N       | 16K
 --------------------------------
 
