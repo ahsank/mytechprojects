@@ -1,14 +1,21 @@
 #pragma once
 #include "framework.h"
 
+static const char client_message[] = "Hello from client!";
+static const char server_message[] = "Hello from server!";
+
 class EchoServer: public EventHandler {
 public:
     EchoServer() {
         description = "echo server";
     }
     virtual void process(char *data, int len, bool iseof) {
+        if (strcmp(data, client_message) != 0) {
+            ERROR_OUT("Invalid message from client");
+            exit(1);
+        }
         INFO_OUT("Server sending response\n");
-        send(data, len, iseof);
+        send(sever_message, sizeof(server_message), 1);
     }
 };
 
@@ -24,8 +31,16 @@ public:
         numSent = numGot = 0;
         description = "echo client";
     }
-
+    void sendData() {
+        INFO_OUT("Sending data %d\n", numSent);
+        send(client_message, sizeof(client_message), true);
+        numSent++;
+    }
     virtual void process(char *data, int len, bool iseof) {
+        if (strcmp(data, server_message) != 0) {
+            ERROR_OUT("Invalid message from server\n");
+            exit(1);
+        }
         numGot++;
         INFO_OUT("Client process response %d\n", numGot);
         if (numGot == 1) {
@@ -43,18 +58,11 @@ public:
             getParent()->cancelLoop();
             return;
         }
-        static char buffer[] = "Hello world!\n";
-        INFO_OUT("Sending data %d\n", numSent);
-        send(buffer, sizeof(buffer), true);
-        numSent++;
+        sendData();
     }
 
     virtual void enable() {
         INFO_OUT("Echo client enabled\n");
-        static char buffer[] = "Hello world!\n";
-        INFO_OUT("Sending data %d\n", numSent);
-        send(buffer, sizeof(buffer), true);
-        numSent++;
-
+        sendData();
     }
 };

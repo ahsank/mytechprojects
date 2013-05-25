@@ -12,6 +12,14 @@
 #endif
 
 
+inline void diep(const char *s)
+{
+    perror(s);
+    exit(1);
+}
+
+#define dieif(cond, s) if ((cond)) { diep(s);}
+
 // Behaves similarly to printf(...), but adds file, line, and function
 // information. I omit do ... while(0) because I always use curly braces in my
 // if statements.

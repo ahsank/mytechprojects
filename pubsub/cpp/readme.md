@@ -7,22 +7,25 @@ Measured in Intel core i7
 
 In an Mac OSX machine
 <pre>
-            Same
-Method    | Process | Messages /sec
+                Same
+Method        | Process | Messages /sec
 -----------------------------------
-livevent  | Y       | 29K
-          | N       | 28K 
+livevent      | Y       | 29K
+              | N       | 28K
 -----------------------------------
-Select    | Y       | 39K
-          | N       | 41K
+Select        | Y       | 39K
+              | N       | 41K
 ----------------------------------
-memcpy    | Y       | 11M
+memcpy        | Y       | 11M
 ----------------------------------
-kevent    | Y       | 42K
-          | N       | 44K            
+kevent        | Y       | 42K
+              | N       | 44K
 ----------------------------------
-udp kevent| Y       | 38K
-          | N       | 35K
+udp kevent    | Y       | 38K
+              | N       | 35K
+----------------------------------
+shared mem    | Y       | 10M
+              | N       | 5 M
 ----------------------------------
 
 </pre>

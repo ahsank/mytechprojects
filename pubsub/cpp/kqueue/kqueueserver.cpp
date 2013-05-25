@@ -1,9 +1,3 @@
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <iostream>
-#include <sys/time.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -12,13 +6,6 @@
 #include <assert.h>
 #include "framework.h"
 
-inline void diep(const char *s)
-{
-    perror(s);
-    exit(1);
-}
-
-#define dieif(cond, s) if ((cond)) { diep(s);}
 
 // Main event loop
 class KQueueMain: public EventMain {

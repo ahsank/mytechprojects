@@ -4,13 +4,13 @@ LDFLAGS=-L$$HOME/local/lib
 LDLIBS=-levent
 
 
-SRCS=selectserver.cpp
+SRCS=shmemserver.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
-all: selectservertest
+all: shmemservertest
 
-selectservertest: selectserver.o ../echotestlib/perftestmain.o
-	g++ -L$$HOME/local/lib  -o selectservertest $^ 
+shmemservertest: shmemserver.o ../echotestlib/perftestmain.o
+	g++ -L$$HOME/local/lib  -o shmemservertest $^ 
 
 depend: .depend
 
@@ -19,7 +19,7 @@ depend: .depend
 	$(CXX) $(CXXFLAGS) -MM $^>>./.depend;
 
 clean:
-	$(RM) $(OBJS) selectservertest
+	$(RM) $(OBJS) shmemservertest
 
 dist-clean: clean
 	$(RM) *~ .dependtool
