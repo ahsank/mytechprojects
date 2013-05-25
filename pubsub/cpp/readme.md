@@ -33,23 +33,26 @@ shared mem    | Y       | 10M
 Inside a linux VM in Parallells desktop running in OSX
 
 <pre>
-            Same
-Method    | Process | Messages /sec
+                Same
+Method        | Process | Messages /sec
 -----------------------------------
-libevent  | Y       | 54 K
-          | N       | 12K
+libevent      | Y       | 54 K
+              | N       | 12K
 ----------------------------------
-select    | Y       | 68K
-          | N       | 15K
+select        | Y       | 68K
+              | N       | 15K
 ----------------------------------
-memcpy    | Y       | 18M
+memcpy        | Y       | 18M
 ----------------------------------
-epoll     | Y       | 111K
-          | N       | 15K
+epoll         | Y       | 111K
+              | N       | 15K
 ---------------------------------
-udp epoll | Y       | 165K
-          | N       | 16K
+udp epoll     | Y       | 165K
+              | N       | 16K
 --------------------------------
+shared mem    | Y       | 9.5M
+              | N       | 7 M
+---------------------------------
 
 </pre>
 
