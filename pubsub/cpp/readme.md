@@ -53,6 +53,11 @@ udp epoll     | Y       | 165K
 shared mem    | Y       | 9.5M
               | N       | 7 M
 ---------------------------------
+shared mem    | Y       | 2M
+sem           | N       | 25K
+---------------------------------
+
+Shared mem sem: Shared memory synchronized by semaphore
 
 </pre>
 
