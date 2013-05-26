@@ -60,10 +60,9 @@ shared mem    | Y       | 2M
 sem           | N       | 25K
 ---------------------------------
 
+</pre>
 Shared men: Shared memory with busy wait.
 Shared mem sem: Shared memory synchronized by semaphore
-
-</pre>
 
 Plan
 ------------------------------------
