@@ -7,7 +7,8 @@ Measured in Intel core i7
 
 In an Mac OSX machine
 <pre>
-                Same
+-----------------------------------
+                Same    | 
 Method        | Process | Messages /sec
 -----------------------------------
 livevent      | Y       | 29K
@@ -27,7 +28,9 @@ udp kevent    | Y       | 38K
 shared mem    | Y       | 10M
               | N       | 5 M
 ----------------------------------
-
+shared mem    | Y       | 728K
+sem           | N       | 130K
+---------------------------------
 </pre>
 
 Inside a linux VM in Parallells desktop running in OSX
@@ -57,6 +60,7 @@ shared mem    | Y       | 2M
 sem           | N       | 25K
 ---------------------------------
 
+Shared men: Shared memory with busy wait.
 Shared mem sem: Shared memory synchronized by semaphore
 
 </pre>
