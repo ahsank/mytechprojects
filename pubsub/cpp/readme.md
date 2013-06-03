@@ -31,6 +31,10 @@ shared mem    | Y       | 10M
 shared mem    | Y       | 728K
 sem           | N       | 130K
 ---------------------------------
+mmap          | Y       | 15M
+              | N       | 5M
+---------------------------------
+
 </pre>
 
 Inside a linux VM in Parallells desktop running in OSX
@@ -62,7 +66,9 @@ sem           | N       | 25K
 
 </pre>
 Shared men: Shared memory with busy wait.
+
 Shared mem sem: Shared memory synchronized by semaphore
+
 
 Plan
 ------------------------------------
