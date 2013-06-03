@@ -63,6 +63,9 @@ shared mem    | Y       | 9.5M
 shared mem    | Y       | 2M
 sem           | N       | 25K
 ---------------------------------
+mmap          | Y       | 16M
+              | N       | 7M
+--------------------------------
 
 </pre>
 Shared men: Shared memory with busy wait.
