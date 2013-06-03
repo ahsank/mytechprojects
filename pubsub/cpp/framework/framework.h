@@ -124,7 +124,7 @@ public:
         return pContext;
     }
 
-    void send(char *data, int len, bool iseof);
+    void send(const char *data, int len, bool iseof);
     virtual void process(char *data, int length, bool iseof) = 0;
 
     EventMain *getParent() {
@@ -139,7 +139,7 @@ class EventMain: public Processor {
 public:
     virtual void cancelLoop() = 0;
     virtual void bindServer(const char *port, EventHandler *pProcessor) = 0;
-    virtual void send(EventHandler *p, char *data, int len, bool isDataEnd) = 0;
+    virtual void send(EventHandler *p, const char *data, int len, bool isDataEnd) = 0;
     virtual void connectToServer(const char *address, const char *port,
             EventHandler *pProcessor) = 0;
     void setParent(EventHandler *pProcessor) {
@@ -148,7 +148,7 @@ public:
 
 };
 
-inline void EventHandler::send(char *data, int len, bool iseof) {
+inline void EventHandler::send(const char *data, int len, bool iseof) {
     ((EventMain*) this->parent)->send(this, data, len, iseof);
 }
 
