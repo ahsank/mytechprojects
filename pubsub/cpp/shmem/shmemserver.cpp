@@ -8,8 +8,8 @@
 #include <sys/shm.h>
 #include "framework.h"
 //
-// Server and client in the same process communicating though copying
-// data using shared memory. 
+// Server and client communicating though copying
+// data using shared memory.
 //
 
 const int SharedMemorySize = 512;
@@ -34,7 +34,7 @@ protected:
     bool loopEnd;
     key_t key;
     int shmemid;
-    
+
 public:
 
     void initialize() {
@@ -82,7 +82,7 @@ public:
         createSharedMem();
     }
 
-    void send(EventHandler *p, char *data, int len, bool isDataEnd) {
+    void send(EventHandler *p, const char *data, int len, bool isDataEnd) {
         if (!p) {
             INFO_OUT("Invalid context");
             return;

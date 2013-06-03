@@ -102,7 +102,7 @@ public:
         createSharedMem();
     }
 
-    void send(EventHandler *p, char *data, int len, bool isDataEnd) {
+    void send(EventHandler *p, const char *data, int len, bool isDataEnd) {
         if (!p) {
             INFO_OUT("Invalid context");
             return;

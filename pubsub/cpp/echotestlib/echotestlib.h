@@ -11,11 +11,11 @@ public:
     }
     virtual void process(char *data, int len, bool iseof) {
         if (strcmp(data, client_message) != 0) {
-            ERROR_OUT("Invalid message from client");
+            ERROR_OUT("Invalid message from client:%s\n", data);
             exit(1);
         }
         INFO_OUT("Server sending response\n");
-        send(sever_message, sizeof(server_message), 1);
+        send(server_message, sizeof(server_message), 1);
     }
 };
 
@@ -38,7 +38,7 @@ public:
     }
     virtual void process(char *data, int len, bool iseof) {
         if (strcmp(data, server_message) != 0) {
-            ERROR_OUT("Invalid message from server\n");
+            ERROR_OUT("Invalid message from server:%s\n", data);
             exit(1);
         }
         numGot++;

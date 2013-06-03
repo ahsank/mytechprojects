@@ -66,6 +66,9 @@ sem           | N       | 25K
 mmap          | Y       | 16M
               | N       | 7M
 --------------------------------
+zeromq        | Y       | 5K
+              | N       | 5K
+-------------------------------
 
 </pre>
 Shared men: Shared memory with busy wait.

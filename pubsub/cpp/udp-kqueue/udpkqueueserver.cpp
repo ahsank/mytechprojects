@@ -120,7 +120,7 @@ public:
         INFO_OUT("Bound to port %s", port);
     }
 
-    void send(EventHandler *p, char *data, int len, bool isDataEnd) {
+    void send(EventHandler *p, const char *data, int len, bool isDataEnd) {
         MyContext *pContext;
         if (!p | !(pContext = (MyContext*) p->getContext())) {
             INFO_OUT("Invalid context");

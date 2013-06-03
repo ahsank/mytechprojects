@@ -78,7 +78,7 @@ public:
 
     }
 
-    void send(EventHandler *p, char *data, int len, bool isDataEnd) {
+    void send(EventHandler *p, const char *data, int len, bool isDataEnd) {
         if (!data || !len) {
             return;
         }
