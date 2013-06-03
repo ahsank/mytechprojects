@@ -6,7 +6,20 @@ Results
 - To rum client and sever in the same process, run the executable. To run them in seperate process, run the executable in two bash console with -s and -c option.
 - The measurements are done in a Intel core i7 machine.
 
-In an Mac OSX machine
+Communication methods tested for client and server in the same machine: 
+- Libevent based tcp client and server.
+- Client and server using select Api.
+- A simple client and server in the same process communicating using memcpy.
+- Using kqueue and tcp. (only for Mac).
+- Using kqueue with udp. (only for Mac).
+- Using epoll and tcp. (only for Linux).
+- Using epoll and udp. (only for Linux).
+- Using shared memory with spin lock.
+- Using shared memory with shared semaphore.
+- Client and server using memory mapped file with spin lock.
+- Client and server using ZromMQ socket.
+
+Performnce in an Mac OSX machine
 <pre>
 -----------------------------------
                 Same    | 
@@ -41,7 +54,7 @@ zeromq        | Y       | 12K
 
 </pre>
 
-Inside a linux VM in Parallells desktop running in OSX
+Performance in a linux VM in Parallells desktop running in OSX
 
 <pre>
                 Same
@@ -73,8 +86,10 @@ mmap          | Y       | 16M
 zeromq        | Y       | 5K
               | N       | 5K
 -------------------------------
-
 </pre>
+
+Note:
+
 Shared men: Shared memory with busy wait.
 
 Shared mem sem: Shared memory synchronized by semaphore
