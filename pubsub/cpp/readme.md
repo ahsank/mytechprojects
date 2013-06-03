@@ -2,8 +2,9 @@ Results
 --------------------------------------
 
 - Client sends a message to server and sends next message after getting response
-
-Measured in Intel core i7
+- Optimizations like buffering and sending multiple messages will not benifit in this method.
+- To rum client and sever in the same process, run the executable. To run them in seperate process, run the executable in two bash console with -s and -c option.
+- The measurements are done in a Intel core i7 machine.
 
 In an Mac OSX machine
 <pre>
@@ -34,6 +35,9 @@ sem           | N       | 130K
 mmap          | Y       | 15M
               | N       | 5M
 ---------------------------------
+zeromq        | Y       | 12K
+              | N       | 12K
+----------------------------------
 
 </pre>
 
