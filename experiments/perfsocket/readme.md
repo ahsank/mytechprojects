@@ -4,10 +4,24 @@ Results
 --------------------------------------
 
 - Client sends a message to server and sends next message after getting response
+- Optimizations like buffering and sending multiple messages will not benifit in this method.
+- To rum client and sever in the same process, run the executable. To run them in seperate process, run the executable in two bash console with -s and -c option.
+- The measurements are done in a Intel core i7 machine.
 
-Measured in Intel core i7
+Communication methods tested for client and server in the same machine: 
+- Libevent based tcp client and server.
+- Client and server using select Api.
+- A simple client and server in the same process communicating using memcpy.
+- Using kqueue and tcp. (only for Mac).
+- Using kqueue with udp. (only for Mac).
+- Using epoll and tcp. (only for Linux).
+- Using epoll and udp. (only for Linux).
+- Using shared memory with spin lock.
+- Using shared memory with shared semaphore.
+- Client and server using memory mapped file with spin lock.
+- Client and server using ZromMQ socket.
 
-In an Mac OSX machine
+Performnce in an Mac OSX machine
 <pre>
 -----------------------------------
                 Same    | 
@@ -36,10 +50,13 @@ sem           | N       | 130K
 mmap          | Y       | 15M
               | N       | 5M
 ---------------------------------
+zeromq        | Y       | 12K
+              | N       | 12K
+----------------------------------
 
 </pre>
 
-Inside a linux VM in Parallells desktop running in OSX
+Performance in a linux VM in Parallells desktop running in OSX
 
 <pre>
                 Same
@@ -71,61 +88,12 @@ mmap          | Y       | 16M
 zeromq        | Y       | 5K
               | N       | 5K
 -------------------------------
-
 </pre>
+
+Note:
+
 Shared men: Shared memory with busy wait.
 
 Shared mem sem: Shared memory synchronized by semaphore
-
-
-Plan
-------------------------------------
-1. Write a C kpoll server
-2. Write a Echo server
-3. Write same server using eventlib
-
-- [x] Single threaded server.
-- [x] Single threaded client.
-- [ ] Test client disconnect handling
-- [ ] Unit tests
-- [ ] Check whether memory leak
-- [ ] Test performance on non virtual machine
-
-4. Write the same server using zeromq
-5. Perf test
-6. Write the same server im java
-7. Write the same server in Ocaml
-8. Write the same server in Erlang
-9. Class design for generic server and client
-10. Pub/sub feature design
-   1. Reliable
-   2. multicast
-   3. flow control
-   4. Last value
-   5. Transactional
-   6. Large number of nodes
-   7. POint to point
-   8. Broker based
-   9. Topic based subscribing
-   10. Authn/Authz
-   11. Object based routing
-   l2. 
-11. Write using blocking socket and lots of threads.
-
-
-Future
---------------------------------
-1. Write a unit test for the socket
-1. Buffer management, zero copy?
-2. Multithreaded io handling
-
-Referece
--------------------------------
-*EventLib*
-
-http://www.wangafu.net/~nickm/libevent-book/01_intro.html
-
-https://github.com/nitrogenlogic/cliserver/blob/master/cliserver.c
-https://idea.popcount.org/2012-09-11-concurrent-queue-in-c/
 
 
