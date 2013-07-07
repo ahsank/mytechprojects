@@ -1,3 +1,5 @@
+It measures performance of different way to communicate data between processes.
+
 Results
 --------------------------------------
 
