@@ -56,7 +56,7 @@ zeromq        | Y       | 12K
 
 </pre>
 
-Performance in a linux VM in Parallells desktop running in OSX
+Performance in a Linux VM in Parallells desktop running in OSX
 
 <pre>
                 Same
@@ -67,6 +67,9 @@ libevent      | Y       | 54 K
 ----------------------------------
 select        | Y       | 68K
               | N       | 15K
+----------------------------------
+udp select    | Y       | 130K
+              | N       | 16K
 ----------------------------------
 memcpy        | Y       | 18M
 ----------------------------------
