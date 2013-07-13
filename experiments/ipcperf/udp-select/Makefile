@@ -1,4 +1,4 @@
-DEST = selectserver
+DEST = udpselectserver
 include ../Makefile.inc
 
 
