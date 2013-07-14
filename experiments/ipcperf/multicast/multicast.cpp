@@ -10,7 +10,6 @@
 #include <fcntl.h>
 #include <sys/select.h>
 #include <assert.h>
-#define traceLevel 1
 #include "framework.h"
 
 const int max_buff = 32767;
@@ -146,7 +145,7 @@ public:
         params.socketfd = multicastSendSocket;
         params.dest.sin_family = AF_INET;
         params.dest.sin_addr.s_addr = inet_addr(multicast_address);
-        params.dest.sin_port = atoi(this->multicastPort);
+        params.dest.sin_port = htons(atoi(this->multicastPort));
 
         for (int i = 0; i < FD_SETSIZE; ++i)
             states[i] = NULL;
@@ -284,34 +283,6 @@ public:
         if (multicast_sock < 0) {
             diep("socket");
         }
-
-        // fcntl(multicast_sock, F_SETFL, O_NONBLOCK);
-
-        memset(&saddr, 0, sizeof(saddr));
-        saddr.sin_family = AF_INET;
-        saddr.sin_port = htons(0); // Use the first free port
-        saddr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-        // Bind to the socket
-        if (bind(multicast_sock, (sockaddr*)&saddr, sizeof(saddr)) < 0){
-            diep("bind");
-        }
-        // Set outgoing interface to default
-        iaddr.s_addr = INADDR_ANY;
-        if (setsockopt(multicast_sock, IPPROTO_IP, IP_MULTICAST_IF, &iaddr,
-                sizeof(iaddr)) < 0) {
-            diep("setsockopt");
-        }
-        // Send multicast traffic to myself too
-        if (setsockopt(multicast_sock, IPPROTO_IP, IP_MULTICAST_LOOP, &oneval,
-                sizeof(oneval)) < 0) {
-            diep("setsockopt");
-        }
-        /* set the TTL (time to live/hop count) for the send */
-         if ((setsockopt(multicast_sock, IPPROTO_IP, IP_MULTICAST_TTL,
-              (void*) &mc_ttl, sizeof(mc_ttl))) < 0) {
-           diep("setsockopt() failed");
-         }
         this->multicastSendSocket = multicast_sock;
 
     }
@@ -342,7 +313,8 @@ public:
 
         saddr.sin_family = AF_INET;
         saddr.sin_port = htons(atoi(this->multicastPort));
-        saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+        // saddr.sin_addr.s_addr = inet_addr("192.168.1.12");
+        saddr.sin_addr.s_addr = INADDR_ANY;
 
         multicast_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         if (multicast_sock < 0) {
@@ -363,17 +335,23 @@ public:
         imreq.imr_interface.s_addr = INADDR_ANY; // use DEFAULT interface
 
         // JOIN multicast group on default interface
-        status = setsockopt(multicast_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP,
-                      (const void *)&imreq, sizeof(struct ip_mreq));
-        if (status < 0) {
+        if (setsockopt(multicast_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+                      (const void *)&imreq, sizeof(struct ip_mreq)) < 0) {
             diep("add membership");
         }
+        int socketBufferSize = 1024*1024;
+        if (setsockopt(multicast_sock, SOL_SOCKET, SO_RCVBUF,
+                      (const void *)&socketBufferSize,
+                      sizeof(socketBufferSize)) < 0) {
+            diep("setsockopt SO_RCVBUF");
+        }
+
         this->clientSocket = multicast_sock;
         this->client = pProcessor;
         // Set this event handler as parent of client processor
         setParent(pProcessor);
 
-        // Send to server unicast address
+        // Server unicast address
         unicast_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         if (unicast_sock < 0) {
             diep("socket");
@@ -384,8 +362,8 @@ public:
         saddr.sin_addr.s_addr = inet_addr(address);
         saddr.sin_port = htons(atoi(port));
 
-        // Enable the client which will do the first send
-        // pass the destination information.
+        // Enable the client which will send message to server to tell
+        // the server to send multicast packet
         UdpParams udpParams = { unicast_sock, saddr };
         pProcessor->setContext((Context*) &udpParams);
         pProcessor->enable();
