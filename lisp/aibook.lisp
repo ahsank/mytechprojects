@@ -10,12 +10,12 @@
 
 (defun convert-op (op)
   "Make op conform to the (EXECUTING op) convension."
-  (unless (some #'executing-op (op-add-list op))
+  (unless (some #'executing-p (op-add-list op))
     (push (list 'executing (op-action op)) (op-add-list op)))
   op)
 
 
-(defun op (action &key preconds add-list del-lists)
+(defun op (action &key preconds add-list del-list)
   "Make a new operator that obeys the (EXECUTING op) convention."
   (convert-op
    (make-op :action action :preconds preconds 
@@ -28,8 +28,11 @@
 
 (defun GPS (state goals &optional (*ops* *ops*))
   "General Problem Solver: from state, achieve goals using *ops*."
-  (remove-if #'atom (achieve-all (cons '(start) state) goals nil)))
+  (find-all-if #'action-p (achieve-all (cons '(start) state) goals nil)))
 
+(defun action-p (x)
+  "Is x something that is (start) or (executing ...)?"
+  (or (equal x '(start)) (executing-p x)))
 
 (defun achieve-all (state goals goal-stack)
   "Achieve each goal, and make sure they still hold at the end."
@@ -59,26 +62,62 @@ or if there is an appropriate op for that is applicable."
   (let ((state2 (achieve-all state (op-preconds op)
 			     (cons goal goal-stack))))
     (unless (null state2)
-      :: Return an updated state
+      ;; Return an updated state
       (dbg-indent :gps (length goal-stack) "Action ~a" (op-action op))
       (append (remove-if #'(lambda (x)
-			     (member-equal x (op-del-list op))
+			     (member-equal x (op-del-list op)))
 			     state2)
-			 (op-add-list op))))))
+			 (op-add-list op)))))
+
+(defun find-all (item sequence &rest keyword-args
+		      &key (test #'eql) test-not &allow-other-keys)
+  "Find all those elements of sequence that match item,
+according to the keywords. Doesn't alter sequence."
+  (if test-not
+      (apply #'remove item sequence
+	     :test-not (complement test-not) keyword-args)
+    (apply #'remove item sequence
+	   :test (complement test) keyword-args)))
+
+(setf (symbol-function 'find-all-if) #'remove-if-not)
 
 (defun appropriate-p (goal op)
   "An op is appropriate to a goal if it is in its add-list."
   (member-equal goal (op-add-list op)))
 
+(defun *dbg-ids* nil "Identifiers used by dbg")
+
+(defun dbg (id format-string &rest args)
+  "Print debugging info if (DEBUG ID) has been specified"
+  (when (member id *dbg-ids*)
+    (fresh-line *debug-io*)
+    (apply #'format *debug-io* format-string args)))
+
+(defun dbg-indent (id indent format-string &rest args)
+  "Print indented debugging info if (DEBUG ID) has been specified."
+  (when (member id *dbg-ids*)
+    (fresh-line *debug-io*)
+    (dotimes (i indent) (princ "    " *debug-io*))
+    (apply #'format *debug-io* format-string args)))
+
+  
+(defun adddebug (&rest ids)
+  "Start dbg output on the given ids."
+  (setf *dbg-ids* (union ids *dbg-ids*)))
+
+(defun undebug (&rest ids)
+  "Stop dbg on the ids. With no ids. stop dbg altogether."
+  (setf *dbg-ids* (if (null ids) nil
+		    (set-difference *dbg-ids ids))))
 
 (defun use (oplist)
   "Use oplist as the default list of operators."
   ;; Return something useful, but not too verbose:
   ;; the number o operators.
-  (length (setf *ops* oplist)))
+  (length (setf *ops* (mapc 'convert-op oplist))))
 
 (defparameter *school-ops*
-  (list 
+  (list
    (make-op :action 'drive-son-to-school
 	    :preconds '(son-at-home car-works)
 	    :add-list '(son-at-school)
@@ -99,5 +138,20 @@ or if there is an appropriate op for that is applicable."
 	    :preconds '(have-money)
 	    :add-list '(shop-has-money)
 	    :del-list '(have-money))))
+
+(defvar *home-state*
+  '(son-at-home car-needs-battery have-money have-phone-book))
+
+(defvar *school-state* '(son-at-school))
+
+(defparameter *banana-ops*
+  (list
+   (op 'climb-on-chair
+       :preconds '(chair-at-middle-room at-middle-room on-floor)
+       :add-list '(at-bananas on-chair)
+       :del-list '(at-middle-room-on-floor))
+   (op 'push-chair-from-door-to-middle-room
+       
+
 
 	    
