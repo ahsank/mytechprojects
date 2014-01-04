@@ -102,7 +102,7 @@ according to the keywords. Doesn't alter sequence."
     (apply #'format *debug-io* format-string args)))
 
   
-(defun adddebug (&rest ids)
+(defun add-debug (&rest ids)
   "Start dbg output on the given ids."
   (setf *dbg-ids* (union ids *dbg-ids*)))
 
@@ -287,19 +287,20 @@ according to the keywords. Doesn't alter sequence."
   "Choose an element from a list of random."
   (elt choices (random (length choices))))
 
-(defun interactive-interpreter (prompt transformer)
-  "Read an expression, transform it, and print the result."
-  (loop
-   (handle-case
-    (progn
-      (if (stringp prompt)
-	  (print prompt)
-	(funcall prompt)
-	(print (funcall transformer (read)))))
-    ;; In case of error, do this:
-    (error (condition)
-	   (format t "~&;; Error ~a ignored, back to top level."
-		   condition)))))
+;;(defun interactive-interpreter (prompt transformer)
+;;  "Read an expression, transform it, and print the result."
+;;  (loop
+;;   (handle-case
+;;    (progn
+;;      (if (stringp prompt)
+;;	  (print prompt)
+;;	(funcall prompt)
+;;	(print (funcall transformer (read)))))
+;;    ;; In case of error, do this:
+;;    (error (condition)
+;;	   (format t "~&;; Error ~a ignored, back to top level."
+;;		   condition)))))
+
 (defun prompt-generator (&optional (num 0) (ctl-string "[~d] "))
   "Return a function that prints prompt like [1], [2], etc."
   #'(lambda () (format t ctl-string (incf num))))
@@ -329,3 +330,95 @@ according to the keywords. Doesn't alter sequence."
 (setf (get '?? 'segment-match) 'segment-match?)
 (setf (get '?if 'segment-match) 'match-if)
 
+(defun tree-search (states goal-p successors combiner)
+  "Find a state that satisfies goal-p. Start with states,
+and search according to successors and combiner."
+  (dbg :search "~&;; Search: ~a" states)
+  (cond ((null states) fail)
+	((funcall goal-p (first states)) (first states))
+	(t (tree-search
+	    (funcall combiner
+		     (funcall successors (first states))
+		     (rest states))
+	    goal-p successors combiner))))
+
+(defun depth-first-search (start goal-p successors)
+  "Search new states first until goal is reached."
+  (tree-search (list start) goal-p successors #'append))
+
+(defun prepend (x y) "Prepend y to start of x" (append y x))
+
+(defun bredth-first-search (start goal-p successors)
+  "Search old states first until goal is reached."
+  (tree-search (list start) goal-p successors #'prepend))
+
+(defun is (value) #'(lambda (x) (eql x value)))
+
+(defun diff (num)
+  "Returns the function that finds the difference from num."
+  #'(lambda (x) (abs (- x num))))
+
+(defun sorter (cost-fn)
+  "Return a combiner function that sorts according to cost-fn."
+  #'(lambda (new old)
+      (sort (append new old) #'< :key cost-fn)))
+
+(defun best-first-search (start goal-p successors cost-fn)
+  "Search lowest cost states first until goal is reached."
+  (tree-search (list start) goal-p successors (sorter cost-fn)))
+
+(defun graph-search (states goal-p successors combiner &optional
+		     (state= #'eql) old-states)
+  "Find a state that satisfies goal-p. Start with states,
+and search according to successors and combiner.
+Don't try the same state twice."
+  (dbg :search "~&;; Search: ~a" states)
+  (cond ((null states) fail)
+	((funcall goal-p (first states)) (first states))
+	(t (graph-search
+	    (funcall
+	     combiner
+	     (new-states states successors state= old-states)
+	     (rest states))
+	    goal-p successors combiner state=
+	    (adjoin (first states) old-states :test state=)))))
+
+(defun new-states (states successors state= old-states)
+  "Generate successor states that have not been before."
+  (remove-if
+   #'(lambda (state)
+       (or (member state states :test state=)
+	   (member state old-states :test state=)))
+   (funcall successors (first states))))
+
+ ;; (defun a*-search (paths goal-p successors cost-fn cost-left-fn
+ ;; 		  &optional (state= #'eql) old-paths)
+ ;;   "Find a path whose state satisfies goal-p, Start with paths,
+ ;; and expand successors, exploring least cost first.
+ ;; When there are duplicate states, keep the one with the 
+ ;; lower cost and discard the other."
+ ;;   (dbg :search ";; Search: ~a" paths)
+ ;;   (cond
+ ;;     ((null paths) fail)
+ ;;     ((funcall goal-p (path-state (first paths)))
+ ;;      (values (first paths) paths))
+ ;;     (t (let* ((path (pop paths))
+ ;; 	      (state (path-state path)))
+ ;; 	 ;; Update PATHS and OLD-PATHS to reflect
+ ;; 	 ;; the new succeors of STATE:
+ ;; 	 (setf old-paths (insert-path path old-paths))
+ ;; 	 (dolist (state2 (funcall successors state))
+ ;; 	   (let* ((cost (+ (path-cost-so-far path)
+ ;; 			   (funcall cost-fn state state2)))
+ ;; 		  (cost2 (funcall cost-left-fn state2))
+ ;; 		  (path2 (make-path
+ ;; 			  :state state2 :previous path
+ ;; 			  :cost-so-far cost
+ ;; 			  :total-cost (+ cost cost2)))
+ ;; 		  (old nil)
+ ;; 		  ;; Place the new path, path2, in the right list:
+ ;; 		  (cond
+ ;; 		    ((setf old (find-path state2 paths state=))
+ ;; 		     (when (better-path path2 old)
+ ;; 		       (setf paths (insert-path
+ ;; 				    path2 (delete old paths))  
