@@ -391,34 +391,83 @@ Don't try the same state twice."
 	   (member state old-states :test state=)))
    (funcall successors (first states))))
 
- ;; (defun a*-search (paths goal-p successors cost-fn cost-left-fn
- ;; 		  &optional (state= #'eql) old-paths)
- ;;   "Find a path whose state satisfies goal-p, Start with paths,
- ;; and expand successors, exploring least cost first.
- ;; When there are duplicate states, keep the one with the 
- ;; lower cost and discard the other."
- ;;   (dbg :search ";; Search: ~a" paths)
- ;;   (cond
- ;;     ((null paths) fail)
- ;;     ((funcall goal-p (path-state (first paths)))
- ;;      (values (first paths) paths))
- ;;     (t (let* ((path (pop paths))
- ;; 	      (state (path-state path)))
- ;; 	 ;; Update PATHS and OLD-PATHS to reflect
- ;; 	 ;; the new succeors of STATE:
- ;; 	 (setf old-paths (insert-path path old-paths))
- ;; 	 (dolist (state2 (funcall successors state))
- ;; 	   (let* ((cost (+ (path-cost-so-far path)
- ;; 			   (funcall cost-fn state state2)))
- ;; 		  (cost2 (funcall cost-left-fn state2))
- ;; 		  (path2 (make-path
- ;; 			  :state state2 :previous path
- ;; 			  :cost-so-far cost
- ;; 			  :total-cost (+ cost cost2)))
- ;; 		  (old nil)
- ;; 		  ;; Place the new path, path2, in the right list:
- ;; 		  (cond
- ;; 		    ((setf old (find-path state2 paths state=))
- ;; 		     (when (better-path path2 old)
- ;; 		       (setf paths (insert-path
- ;; 				    path2 (delete old paths))  
+(defstruct (path (:print-function print-path))
+  state (previous nil) (cost-so-far 0) (total-cost 0))
+
+(defun is (value &key (key #'identity) (test #'eql))
+  "Returns a predicate that tests for a given value."
+  #'(lambda (path) (funcall test value (funcall key path))))
+
+(defun print-path (path &optional (stream t) depth)
+  (declare (ignore depth))
+  (format stream "#<Path to ~a cost ~,1f>"
+	  (path-state path) (path-total-cost path)))
+
+
+(defun a*-search (paths goal-p successors cost-fn cost-left-fn
+		  &optional (state= #'eql) old-paths)
+  "Find a path whose state satisfies goal-p, Start with paths,
+ and expand successors, exploring least cost first.
+ When there are duplicate states, keep the one with the 
+ lower cost and discard the other."
+  (dbg :search ";; Search: ~a" paths)
+  (cond
+     ((null paths) fail)
+     ((funcall goal-p (path-state (first paths)))
+      (values (first paths) paths))
+     (t (let* ((path (pop paths))
+ 	      (state (path-state path)))
+ 	 ;; Update PATHS and OLD-PATHS to reflect
+ 	 ;; the new succeors of STATE:
+ 	(setf old-paths (insert-path path old-paths))
+	(dolist (state2 (funcall successors state))
+	  (let* ((cost (+ (path-cost-so-far path)
+ 			   (funcall cost-fn state state2)))
+ 		  (cost2 (funcall cost-left-fn state2))
+ 		  (path2 (make-path
+ 			  :state state2 :previous path
+ 			  :cost-so-far cost
+ 			  :total-cost (+ cost cost2)))
+ 		  (old nil))
+ 		  ;; Place the new path, path2, in the right list:
+ 	  (cond
+	    ((setf old (find-path state2 paths state=))
+	     (when (better-path path2 old)
+	       (setf paths (insert-path
+			    path2 (delete old paths)))))
+	    ((setf old (find-path state2 old-paths state=))
+	     (when (better-path path2 old)
+	       (setf paths (insert-path path2 paths))
+	       (setf old-paths (delete old old-paths))))
+	    (t (setf paths (insert-path path2 paths))))))
+	   (a*-search paths goal-p successors cost-fn cost-left-fn
+		      state= old-paths)))))
+
+
+(defun find-path (state paths state=)
+  "Find the path with this state among list of paths."
+  (find state paths :key #'path-state :test state=))
+
+(defun better-path (path1 path2)
+  "Is path1 cheaper than path2?"
+  (< (path-total-cost path1) (path-total-cost path2)))
+
+(defun insert-path (path paths)
+  "Put path into the right position, sorted by total cost."
+  ;; Merge is a built-in function
+  (merge 'list (list path) paths #'< :key #'path-total-cost))
+
+(defun path-states (path)
+  "Collect the states along this path."
+  (if (null path)
+      nil
+      (cons (path-state path)
+	    (path-states (path-previous path)))))
+
+
+(defparameter *example-graph* 
+  '((a (b.4) (c.2)) (b (d.10) (c.5)) (c (e.3)) (d (f.11)) (e (d.4))))
+
+(defun get-successor ((graph *example-graph*))
+  "Returns a function that returns successor."
+  #'(lambda (node) (car (find node
