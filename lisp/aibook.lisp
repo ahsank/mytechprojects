@@ -410,7 +410,7 @@ Don't try the same state twice."
  and expand successors, exploring least cost first.
  When there are duplicate states, keep the one with the 
  lower cost and discard the other."
-  (dbg :search ";; Search: ~a" paths)
+  (dbg :search ";; Search: ~a old: ~a" paths old-paths)
   (cond
      ((null paths) fail)
      ((funcall goal-p (path-state (first paths)))
@@ -465,9 +465,22 @@ Don't try the same state twice."
 	    (path-states (path-previous path)))))
 
 
+;; Shortest path a c e d f
 (defparameter *example-graph* 
-  '((a (b.4) (c.2)) (b (d.10) (c.5)) (c (e.3)) (d (f.11)) (e (d.4))))
+  '((a (b  4) (c  2)) (b (c 5) (d 10)) (c (e 3)) (d (f 11)) (e (d 4))))
 
-(defun get-successor ((graph *example-graph*))
-  "Returns a function that returns successor."
-  #'(lambda (node) (car (find node
+
+(defun graph-successor (node)
+  "Returns successors of a node."
+  (mapcar #'car (graph-entry node)))
+
+(defun graph-entry (node)
+  "Returns graph entries of a node."
+  (cdr (assoc node *example-graph*)))
+
+(defun graph-cost (node1 node2)
+  "Returns cost between node1 and node2."
+  (second (assoc node2 (graph-entry node1))))
+
+;; (path-states (a*-search (list (make-path :state 'a)) (is 'f) #'graph-successor
+;; 		    #'graph-cost #'(lambda (x) 0)))
