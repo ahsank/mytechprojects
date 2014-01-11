@@ -33,7 +33,7 @@ livevent      | Y       | 29K
 Select        | Y       | 39K
               | N       | 41K
 -----------------------------------
-UDP Selec     | Y       | 41K
+UDP Select    | Y       | 41K
               | N       | 36K
 ----------------------------------
 memcpy        | Y       | 11M
