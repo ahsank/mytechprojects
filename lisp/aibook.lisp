@@ -174,11 +174,12 @@ according to the keywords. Doesn't alter sequence."
 (defconstant no-bindings '((t . t)) "Indicates pat-match success, with no variables.")
 
 (defun get-binding (var bindings)
-  "Find a (variable . value) pair in a binding list."
+  "Find a (variable . value) pair in a binding list. A binding is a list of
+associated pair. Use extend bindings to create a new binding"
   (assoc var bindings))
 
 (defun binding-val (binding)
-  "Get the value part of a single binding."
+  "Get the value part of a single binding. See get-binding for detail."
   (cdr binding))
 
 (defun lookup (var bindings)
@@ -186,7 +187,8 @@ according to the keywords. Doesn't alter sequence."
   (binding-val (get-binding var bindings)))
 
 (defun extend-bindings (var val bindings)
-  "Add a (var . value) pair to a binding list."
+  "Add a (var . value) pair to a binding list. Use nil for binding parameter
+to create initial binding"
   (cons (cons var val) bindings))
 
 (defun pat-match (pattern input &optional (bindings no-bindings))
@@ -325,7 +327,7 @@ according to the keywords. Doesn't alter sequence."
 (setf (get '?and 'single-match) 'match-and)
 (setf (get '?not 'single-match) 'match-not)
 
-(setf (get '?* 'segmenet-match) '(segment-match)
+(setf (get '?* 'segmenet-match) 'segment-match)
 (setf (get '?+ 'segment-match) 'segment-match+)
 (setf (get '?? 'segment-match) 'segment-match?)
 (setf (get '?if 'segment-match) 'match-if)
@@ -484,3 +486,12 @@ Don't try the same state twice."
 
 ;; (path-states (a*-search (list (make-path :state 'a)) (is 'f) #'graph-successor
 ;; 		    #'graph-cost #'(lambda (x) 0)))
+
+(defstruct (rule (:type list)) pattern response)
+
+;;(defstruct (exp (:type list) (:constructor mkexp (lhs op rhs))
+;;		op lhs rhs))
+
+(defun exp-p (x) (consp x))
+(defun exp-args (x) (rest x))
+
