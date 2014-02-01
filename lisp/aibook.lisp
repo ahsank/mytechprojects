@@ -186,10 +186,25 @@ associated pair. Use extend bindings to create a new binding"
   "Get the value part (for var) from a binding list."
   (binding-val (get-binding var bindings)))
 
+(defun make-binding (var val)
+  "Create a binding pair."
+  (cons var val))
+
 (defun extend-bindings (var val bindings)
-  "Add a (var . value) pair to a binding list. Use nil for binding parameter
+  "Add a (var . value) pair to a binding list. Use NO-BINDINGS for binding parameter
 to create initial binding"
-  (cons (cons var val) bindings))
+  (cons (make-binding var val)
+	(if (eq bindings no-bindings) nil bindings)))
+
+(setf (get '?is 'single-match) 'match-is)
+(setf (get '?or 'single-match) 'match-or)
+(setf (get '?and 'single-match) 'match-and)
+(setf (get '?not 'single-match) 'match-not)
+
+(setf (get '?* 'segmenet-match) 'segment-match)
+(setf (get '?+ 'segment-match) 'segment-match+)
+(setf (get '?? 'segment-match) 'segment-match?)
+(setf (get '?if 'segment-match) 'match-if)
 
 (defun pat-match (pattern input &optional (bindings no-bindings))
   "Match pattern against input in the context of the bindings"
@@ -198,7 +213,9 @@ to create initial binding"
 	 (match-variable pattern input bindings))
 	((eql pattern input) bindings)
 	((segment-pattern-p pattern)
-	 (segment-match pattern input bindings))
+	 (segment-matcher pattern input bindings))
+	((single-pattern-p pattern)
+	 (single-matcher pattern input bindings))
 	((and (consp pattern) (consp input))
 	 (pat-match (rest pattern) (rest input)
 		     (pat-match (first pattern) (first input) bindings)))
@@ -217,9 +234,80 @@ to create initial binding"
 	  (t fail))))
 
 (defun segment-pattern-p (pattern)
-  "Is his a segment matching pattern: ((?* var) . pat)"
+  "Is this a segment matching pattern like ((?* var) . pat) ? Then the var
+matches one or more element. For example '((?* ?p) need (?* ?x)) matches
+'(Mr Hulot and I need a vacation) with ?P as '(MR HULOT AND I) and ?X
+as (A VACATION)."
+  (and (consp pattern) (consp (first pattern))
+       (symbolp (first (first pattern)))
+       ; Check that it uses registerd syntaxes like ?* ?+
+       (segment-match-fn (first (first pattern)))))
+
+(defun single-pattern-p (pattern)
+  "Is this a single-matching pattern? E.g. (?is x predicate) (?and .patterns) (
+?or . patterns)"
   (and (consp pattern)
-       (starts-with (first pattern) '?*)))
+       (single-match-fn (first pattern))))
+
+(defun segment-matcher (pattern input bindings)
+  "Call the right function for this kind of segment pattern."
+  (funcall (segment-match-fn (first (first pattern)))
+	   pattern input bindings))
+
+(defun single-matcher (pattern input bindings)
+  "Call the right function for this kind of single pattern."
+  (funcall (single-match-fn (first pattern))
+	   (rest pattern) input bindings))
+
+(defun segment-match-fn (x)
+  "Get the segment-match function for x, if it is a symbol that has one."
+  (when (symbolp x) (get x 'segment-match)))
+
+(defun single-match-fn (x)
+  "Get the single-match function for x, if it is a symbol that has one."
+  (when (symbolp x) (get x 'single-match)))
+
+(defun match-is (var-and-pred input bindings)
+  "Succeed and bind var if the input satisfies pred,
+where var-and-pred is the list (var pred).
+Example, (match-is '(?is ?n numberp) 34 no-bindings) returns ((?N . 34))"
+  (let* ((var (first var-and-pred))
+        (pred (second var-and-pred))
+	(new-bindings (pat-match var input bindings)))
+    (if (or (eq new-bindings fail)
+	    (not (funcall pred input)))
+	fail
+      new-bindings)))
+
+(defun match-and (patterns input bindings)
+  "Succeed if all the patterns match the input.
+Example (match-and '((?is ?n numberp) (?is ?n oddp)) 3 no-bindings)
+returns ((?N . 3))"
+  (cond ((eq bindings fail) fail)
+	((null patterns) bindings)
+	(t (match-and (rest patterns) input
+		      (pat-match (first patterns) input
+				 bindings)))))
+
+(defun match-or (patterns input bindings)
+  "Succeed if all the patterns match the input. If multiple patterns
+match the input, the returned binding is fromt the first pattern match.
+Example: (match-or '(?x 2 3) 3 no-bindings) returns ((?X . 3))."
+  (if (null patterns)
+      fail
+    (let ((new-bindings (pat-match (first patterns)
+				    input bindings)))
+      (if (eq new-bindings fail)
+	  (match-or (rest patterns) input bindings)
+	new-bindings))))
+
+(defun match-not (patterns input bindings)
+  "Succeed if none of the patterns match the input.
+This will never bind any variables.
+Example: (match-not '((?is n oddp) 4)' 6 no-bindings) returns no-bindings"
+  (if (match-or patterns input bindings)
+      fail
+    bindings))
 
 (defun segment-match (pattern input bindings &optional (start 0))
   "Match the segment pattern ((?* var) . pat) against input."
@@ -306,31 +394,6 @@ to create initial binding"
 (defun prompt-generator (&optional (num 0) (ctl-string "[~d] "))
   "Return a function that prints prompt like [1], [2], etc."
   #'(lambda () (format t ctl-string (incf num))))
-
-(defun pat-match (pattern input &optional (bindings no-bindings))
-  "Match pattern against input in the context of the bindings"
-  (cond ((eq bindings fail) fail)
-	((variable-p pattern)
-	 (match-variable pattern input bindings))
-	((eql pattern input) bindings)
-	((segment-pattern-p pattern)
-	 (segment-matcher pattern input bindings))
-	((single-pattern-p pattern)
-	 (single-matcher pattern input input bindings))
-	((and (consp pattern) (consp input))
-	 (pat-match (rest pattern) (rest input)
-		     (pat-match (first pattern) (first input) bindings)))
-	(t fail)))
-
-(setf (get '?is 'single-match) 'match-is)
-(setf (get '?or 'single-match) 'match-or)
-(setf (get '?and 'single-match) 'match-and)
-(setf (get '?not 'single-match) 'match-not)
-
-(setf (get '?* 'segmenet-match) 'segment-match)
-(setf (get '?+ 'segment-match) 'segment-match+)
-(setf (get '?? 'segment-match) 'segment-match?)
-(setf (get '?if 'segment-match) 'match-if)
 
 (defun tree-search (states goal-p successors combiner)
   "Find a state that satisfies goal-p. Start with states,
