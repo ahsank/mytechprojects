@@ -317,7 +317,7 @@ Example: (match-not '((?is n oddp) 4)' 6 no-bindings) returns no-bindings"
 	(match-variable var input bindings)
       ;; We assume that pat starts with a constant
       ;; In other words, a pattern can't have 2 consecutive vars
-      (let ((pos (position (first pat) input :start start :test #'equal)))
+      (let ((pos (first-match-pos (first pat) input start)))
 	(if (null pos)
 	    fail
 	  (let ((b2 (pat-match pat (subseq input pos)
@@ -327,6 +327,52 @@ Example: (match-not '((?is n oddp) 4)' 6 no-bindings) returns no-bindings"
 	    (if (eq b2 fail)
 		(segment-match pattern input bindings (+ pos 1))
 	      b2)))))))
+
+(defun first-match-pos (pat1 input start)
+  "Find the first position that pat1 could possibly match input,
+starting at position start. If pat1 is non-constant, then just
+return start."
+  (cond ((and (atom pat1) (not (variable-p pat1)))
+	 (position pat1 input :start start :test #'equal))
+	((< start (length input)) start)
+	(t nil)))
+
+(defun segment-match+ (pattern input bindings)
+  "Match one or more elements of input."
+  (segment-match pattern input bindings 1))
+
+(defun segment-match? (pattern input bindings)
+  "match zero or one element of input."
+  (let ((var (second (first pattern)))
+	(pat (rest pattern)))
+    (or (pat-match (cons var pat) input bindings)
+	(pat-match pat input bindings))))
+
+;; Following may not work. see:
+;; http://stackoverflow.com/questions/18331753
+;; On function name and dynamic binding in common lisp
+(defun match-if (pattern input bindings)
+  "Test an arbitrary expression involving variables.
+The pattern looks like (?if code) . rest).
+Example: 
+  (match-if '(?if (eql (?op ?x ?y) ?z)) nil
+'((?x . 3)(?op . +)(?y . 4)(?z 7)))"
+  (and (progv (mapcar #'car bindings)
+	   (mapcar #'cdr bindings)
+	 (eval (second (first pattern))))
+	 (pat-match (rest pattern) input bindings)))
+
+(defun pat-match-abbrev (symbol expansion)
+  "Define symbol as a macro standing for a pat-match pattern."
+  (setf (get symbol 'expand-pat-match-abbrev)
+	(expand-pat-match-abbrev expansion)))
+
+(defun expand-pat-match-abbrev (pat)
+  "Expand out all pattern matching abbreviations in pat."
+  (cond ((and (symbolp pat) (get pat 'expand-pat-match-abbrev)))
+	((atom pat) pat)
+	(t (cons (expand-pat-match-abbrev (first pat))
+		 (expand-pat-match-abbrev (rest pat))))))
 
 (defun starts-with (list x)
   "Is this a list whose first element is x?"
