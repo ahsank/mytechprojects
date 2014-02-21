@@ -178,6 +178,10 @@ according to the keywords. Doesn't alter sequence."
 associated pair. Use extend bindings to create a new binding"
   (assoc var bindings))
 
+(defun binding-var (binding)
+  "Get the var part of a single binding."
+  (car binding))
+
 (defun binding-val (binding)
   "Get the value part of a single binding. See get-binding for detail."
   (cdr binding))
@@ -201,7 +205,7 @@ to create initial binding"
 (setf (get '?and 'single-match) 'match-and)
 (setf (get '?not 'single-match) 'match-not)
 
-(setf (get '?* 'segmenet-match) 'segment-match)
+(setf (get '?* 'segment-match) 'segment-match)
 (setf (get '?+ 'segment-match) 'segment-match+)
 (setf (get '?? 'segment-match) 'segment-match?)
 (setf (get '?if 'segment-match) 'match-if)
@@ -355,7 +359,9 @@ return start."
   "Test an arbitrary expression involving variables.
 The pattern looks like (?if code) . rest).
 Example: 
-  (match-if '(?if (eql (?op ?x ?y) ?z)) nil
+  (match-if '((?if (eql (?op ?x ?y) ?z))) nil
+'((?x . 3)(?op . +)(?y . 4)(?z 7))). Actually it may not work,
+see comment above. But (match-if '((?if (eql (funcall ?op ?x ?y) ?z))) nil
 '((?x . 3)(?op . +)(?y . 4)(?z 7)))"
   (and (progv (mapcar #'car bindings)
 	   (mapcar #'cdr bindings)
@@ -367,12 +373,20 @@ Example:
   (setf (get symbol 'expand-pat-match-abbrev)
 	(expand-pat-match-abbrev expansion)))
 
+(pat-match-abbrev '?x* '(?* ?x))
+(pat-match-abbrev '?y* '(?* ?y))
+; ?X matching a list
+(pat-match '((?* ?X)) '(hello I am here))
+
 (defun expand-pat-match-abbrev (pat)
   "Expand out all pattern matching abbreviations in pat."
   (cond ((and (symbolp pat) (get pat 'expand-pat-match-abbrev)))
 	((atom pat) pat)
 	(t (cons (expand-pat-match-abbrev (first pat))
 		 (expand-pat-match-abbrev (rest pat))))))
+; Tests
+(pat-match '(?X (?if (= ?x 3))) '(3))
+(pat-match '((?is ?X numberp)) '(2))
 
 (defun starts-with (list x)
   "Is this a list whose first element is x?"
@@ -395,13 +409,6 @@ Example:
    (print 'eliza>)
    (write (flatten (use-eliza-rules (read))) :pretty t)))
 
-(defun use-eliza-rules (input)
-  "Find some rule with which to transform the input."
-  (some #'(lambda (rule)
-	    (let ((result (pat-match (rule-pattern rule) input)))
-	      (if (not (eq result fail))
-		  (sublis (switch-viewpoint result)
-			  (random-elt (rule-responses rule)))))) *eliza-rules*))
 
 (defun switch-viewpoint (words)
   "Change I to you and vice versa. and so on."
@@ -598,9 +605,96 @@ Don't try the same state twice."
 
 (defstruct (rule (:type list)) pattern response)
 
-;;(defstruct (exp (:type list) (:constructor mkexp (lhs op rhs))
-;;		op lhs rhs))
+(defstruct (expr (:type list) (:constructor mkexp (lhs op rhs)))
+		op lhs rhs)
 
 (defun exp-p (x) (consp x))
 (defun exp-args (x) (rest x))
 
+(defparameter
+  *student-rules*
+  (mapcar
+   #'expand-pat-match-abbrev
+   '(((?x* |.|) ?x)
+     ((?x* |.| ?y*) (?x ?y))
+     ((if ?x* |.| then ?y) (?x ?y))
+     ((if ?x* |,| ?y*) (?x ?y))
+     ((if ?x |,| ?y*) (?x ?y))
+     ((?x* |,| and ?y*) (?x ?y))
+     (((find ?x* and ?y*) ((= to-find-1 ?x) (= to-find-2 ?y))))
+     ((find ?x*) (= to-find ?x))
+     ((?x* equals y*) (= ?x ?y))
+     ((?x* same as ?y*) (= ?x ?y))
+     ((?x* = ?y*) (= ?x ?y))
+     ((?x* is equal to ?y*) (= ?x ?y))
+     ((?x* is ?y*) (= ?x ?y))
+     ((?x* - ?y*) (- ?x ?y))
+     ((?x* minus ?y*) (- ?x ?y))
+
+     ((difference between ?x* and y*) (- ?y ?x))
+     ((difference ?x* and ?y*) (- ?y ?x))
+     ((?x* + ?y*) (+ ?x ?y))
+     ((sum ?x* and ?y*) (+x ?x ?y))
+     ((product ?x* and ?y*) (* ?x ?y))
+     ((?x* * ?y*) (* ?x ?y))
+     ((?x* times ?y*) (* ?x ?y))
+     ((?x8 / ?y*) (/ ?x ?y))
+     ((?x* per ?y*) (/ ?x ?y))
+     ((?x* divided by ?y*) (/ ?x ?y))
+     ((half ?x*) (/ ?x 2))
+     ((one half ?x*) (/ ?x 2))
+     ((twice ?x*) (* 2 ?x))
+     ((square ?x*) (* ?x ?x))
+     ((?x* % less than ?y*)  (* ?y (/ (- 100 ?x) 100)))
+     ((?x* % more than ?y*) (* ?y (/ (+ 1000 ?x) 100)))
+     ((?x* % ?y*) (* (/ ?x 100) ?y)))))
+
+(defun rule-based-translator
+  (input rules &key (matcher #'pat-match)
+	 (rule-if #'first) (rule-then #'rest) (action #'sublis))
+  "Find the first rule in the rules that matches input. then apply
+the action to that rule"
+  (some
+   #'(lambda (rule)
+       (let ((result (funcall matcher (funcall rule-if rule) input)))
+	 (if (not (eq result fail))
+	     (funcall action result (funcall rule-then rule)))))
+   rules))
+
+;; Example (use-eliza-rules '(hello eliza))
+(defun use-eliza-rules (input)
+  "Find some rule with which to transform the input."
+  (rule-based-translator input *eliza-rules*
+			 :action #'(lambda (bindings responses)
+				     (sublis (switch-viewpoint bindings)
+					    (random-elt responses)))))
+				      
+(defun student (words)
+  "Solve certain Algebra Word Problems."
+  (solve-equations
+   (create-list-of-equations
+    (translate-to-expression (remove-if #'noise-word-p words)))))
+
+(defun translate-to-expression (words)
+  "Translate an English phrase into an equation or expression."
+  (or (rule-based-translator
+       words *student-rules*
+       :rule-if #'rule-pattern :rule-then #'rule-response
+       :action #'(lambda (bindings response)
+		   (sublis (mapcar #'translate-pair bindings)
+			   response)))
+      (make-variable words)))
+
+(defun translate-pair (pair)
+  "Translate the value part of the pair into an equation or expression."
+  (cons (binding-var pair)
+	(translate-to-expression (binding-val pair))))
+
+(defun make-variable (words)
+  "Create a variable name based on the given list of words"
+  ;; The list of words will already have noise words reoved
+  (first words))
+
+(defun noise-word-p (word)
+  "Is this a low-content word that can be safely ignored?"
+  (member word '(a an the this number of $)))
