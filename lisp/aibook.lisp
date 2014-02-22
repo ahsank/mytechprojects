@@ -373,11 +373,6 @@ see comment above. But (match-if '((?if (eql (funcall ?op ?x ?y) ?z))) nil
   (setf (get symbol 'expand-pat-match-abbrev)
 	(expand-pat-match-abbrev expansion)))
 
-(pat-match-abbrev '?x* '(?* ?x))
-(pat-match-abbrev '?y* '(?* ?y))
-; ?X matching a list
-(pat-match '((?* ?X)) '(hello I am here))
-
 (defun expand-pat-match-abbrev (pat)
   "Expand out all pattern matching abbreviations in pat."
   (cond ((and (symbolp pat) (get pat 'expand-pat-match-abbrev)))
@@ -385,6 +380,10 @@ see comment above. But (match-if '((?if (eql (funcall ?op ?x ?y) ?z))) nil
 	(t (cons (expand-pat-match-abbrev (first pat))
 		 (expand-pat-match-abbrev (rest pat))))))
 ; Tests
+(pat-match-abbrev '?x* '(?* ?x))
+(pat-match-abbrev '?y* '(?* ?y))
+; ?X matching a list
+(pat-match '((?* ?X)) '(hello I am here))
 (pat-match '(?X (?if (= ?x 3))) '(3))
 (pat-match '((?is ?X numberp)) '(2))
 
@@ -605,12 +604,6 @@ Don't try the same state twice."
 
 (defstruct (rule (:type list)) pattern response)
 
-(defstruct (expr (:type list) (:constructor mkexp (lhs op rhs)))
-		op lhs rhs)
-
-(defun exp-p (x) (consp x))
-(defun exp-args (x) (rest x))
-
 (defparameter
   *student-rules*
   (mapcar
@@ -690,6 +683,13 @@ the action to that rule"
   (cons (binding-var pair)
 	(translate-to-expression (binding-val pair))))
 
+(defun create-list-of-equations (exp)
+  "Seperate out equations embedded in nested parens."
+  (cond ((null exp) nil)
+	((atom (first exp)) (list exp))
+	(t (append (create-list-of-equations (first exp))
+		   (create-list-of-equations (rest exp))))))
+
 (defun make-variable (words)
   "Create a variable name based on the given list of words"
   ;; The list of words will already have noise words reoved
@@ -698,3 +698,149 @@ the action to that rule"
 (defun noise-word-p (word)
   "Is this a low-content word that can be safely ignored?"
   (member word '(a an the this number of $)))
+
+(defun solve-equations (equations)
+  "Print the equations and their solution"
+  (print-equations "The equations to be solved are:" equations)
+  (print-equations "The solution is:" (solve equations nil)))
+
+(defstruct (expr (:type list) (:constructor mkexpr (lhs op rhs)))
+		op lhs rhs)
+
+(defun expr-p (x) (consp x))
+(defun expr-args (x) (rest x))
+
+
+(defun solve (equations known)
+  "Solve a system of equations by constraint propagation."
+  ;; Try to solve for one equation, and substitute its value into
+  ;; the others. If that doesn't work, return what is known.
+  (or (some #'(lambda (equation)
+		(let ((x (one-unknown equation)))
+		  (when x
+		    (let ((answer (solve-arithmatic
+				  (isolate equation x))))
+		    (solve (subst (expr-rhs answer) (expr-lhs answer)
+			   (remove equation equations))
+		    (cons answer known))))))
+	    equations)
+      known))
+
+(defun isolate (e x)
+  "Isolate the lone x in e on the left-hand side of e."
+  ;; This assumes there is exactly one x in e,
+  ;; and that e is an equation.
+  (cond ((eq (expr-lhs e) x)
+	 ;; Case I: X = A -> X = n
+	 e)
+	((in-expr x (expr-rhs e))
+	 ;; Case II: A = f(X) -> f(X) = A
+	 (isolate (mkexpr (expr-rhs e) '= (expr-lhs e)) x))
+	((in-expr x (expr-lhs (expr-lhs e)))
+	 ;; Case III: f(X)*A = B -> f(X) = B/A
+	 (isolate (mkexpr (expr-lhs (expr-lhs e)) '= 
+			  (mkexpr (expr-rhs e)
+				  (inverse-op (expr-op (expr-lhs e)))
+				  (expr-rhs (expr-lhs e)))) x))
+	((commutative-p (expr-op (expr-lhs e)))
+	 ;; Case IV: A*f(X) = B -> f(X) = B/A
+	 (isolate (mkexpr (expr-rhs (expr-lhs e)) '= 
+			  (mkexpr (expr-rhs e)
+				  (inverse-op (expr-op (expr-lhs e)))
+				  (expr-lhs (expr-lhs e)))) x))
+	(t ;; Case V: A/f(X) = B -> f(X) = A/B
+	 (isolate (mkexpr (expr-rhs (expr-lhs e)) '=
+			  (mkexpr (expr-lhs (expr-lhs e))
+				  (expr-op (expr-lhs e))
+				  (expr-rhs e))) x))))
+(defun print-equations (header equations)
+  "Print a list of equations."
+  (format t "~%~a~{~% ~{ ~a~}~}~%" header
+	  (mapcar #'prefix->infix equations)))
+
+(defconstant operators-and-inverses
+    '((+ -) (- +) (* /) (/ *) (= =)))
+
+(defun inverse-op (op)
+  (second (assoc op operators-and-inverses)))
+
+(defun unknown-p (exp)
+  (symbolp exp))
+
+(defun in-expr (x exp)
+  "True if x aprears anywhere in exp."
+  (or (eq x exp)
+      (and (expr-p exp)
+	   (or (in-expr x (expr-lhs exp)) (in-expr x (expr-rhs exp))))))
+
+(defun no-unknown (exp)
+  "Returns true if there is no unknowns in exp."
+  (cond ((unknown-p exp) nil)
+	((atom exp) t)
+	((no-unknown (expr-lhs exp)) (no-unknown (expr-rhs exp)))
+	(t nil)))
+
+(defun one-unknown (exp)
+  "Returns the single unknown in exp. If is exactly one."
+  (cond ((unknown-p exp) exp)
+	((atom exp) nil)
+	((no-unknown (expr-lhs exp)) (one-unknown (expr-rhs exp)))
+	((no-unknown (expr-rhs exp)) (one-unknown (expr-lhs exp)))
+	(t nil)))
+
+(defun commutative-p (op)
+  "Is operator commutative?"
+  (member op '(+ * =)))
+
+(defun solve-arithmatic (equation)
+  "Do the arithmatic for the right hand side."
+  ;; This assumes that the right-hand side is in the right form.
+  (mkexpr (expr-lhs equation) '= (eval (expr-rhs equation))))
+
+(defun binary-exp-p (x)
+  (and (expr-p x) (= (length (expr-args x)) 2)))
+
+(defun prefix->infix (exp)
+  "Translate prefix to infix expressions."
+  (if (atom exp) exp
+      (mapcar #'prefix->infix
+	      (if (binary-exp-p exp)
+		  (list (expr-lhs exp) (expr-op exp) (expr-rhs exp))
+		  exp))))
+
+
+;; Tests 
+(solve-equations '((= (+ 3 4) (* (- 5 (+ 2 x)) 7))
+			    (= (+ (* 3 x) y) 12)))
+
+(defun fib (n)
+  "Compute the nth number in the Fibonacci sequene."
+  (if (<= n 1) 1
+      (+ (fib (- n 1)) (fib (- n 2)))))
+
+(defun memo (fn name key test)
+  "Return the memo-funcion of fn."
+  (let ((table (make-hash-table :test test)))
+    (setf (get name 'memo) table)
+    #'(lambda (&rest args)
+	(let ((k (funcall key args)))
+	(multiple-value-bind (val found-p)
+	    (gethash k table)
+	  (if found-p
+	      val
+	      (setf (gethash k table) (apply fn args))))))))
+
+(defun memoisze (fn-name &key (key #'first) (test #'eql))
+  "Replace fn-name's global definition with a memoized version."
+  (setf (symbol-function fn-name) (memo (symbol-function fn-name) fn-name key test)))
+
+(defun clear-memoize (fn-name)
+  "Clear the hash table from a memo function."
+  (let ((table (get fn-name 'memo))
+	(when table (clrhash table)))))
+
+(defmacro defun-meo (fn args &body body)
+  "Define a memoize function."
+  '(memoize (defun ,fn ,args . ,body)))
+
+
