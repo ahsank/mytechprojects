@@ -393,6 +393,18 @@ see comment above. But (match-if '((?if (eql (funcall ?op ?x ?y) ?z))) nil
 
 (defun rule-pattern (rule) (first rule))
 (defun rule-responses (rule) (rest rule))
+(defun rule-lhs (rule)
+  "The left-hand side of a rule."
+  (first rule))
+
+(defun rule-rhs (rule)
+  "The right-hand side of a rule."
+  (rest (rest rule)))
+
+(defun one-f (set)
+  "Pick one element of set. and make a list of it."
+  (list (random-elt set)))
+
 
 (defparameter *eliza-rules*
   '((((?* ?x) hello (?* ?y)) (How do you do. Please state your problem.))
@@ -839,8 +851,101 @@ the action to that rule"
   (let ((table (get fn-name 'memo))
 	(when table (clrhash table)))))
 
-(defmacro defun-meo (fn args &body body)
+(defmacro defun-memo (fn args &body body)
   "Define a memoize function."
   '(memoize (defun ,fn ,args . ,body)))
 
 
+(defun compile-rule (rule)
+  "Translate a grammar rule into a LISp function definition."
+  (let ((rhs (rule-rhs rule)))
+    `(defun ,(rule-lhs rule) ()
+       ,(cond ((every #'atom rhs) '(one-of `,rhs))
+	      ((length=1 rhs) (build-code (first rhs)))
+	      (t `(case (random ,(length rhs))
+		    ,@(build-cases 0 rhs)))))))
+
+(defun build-cases (number choices)
+  "Returns a list of case-clauses"
+  (when choices
+    (cons (list number (list number (build-code (first choices))))
+	  (build-cases (+ number 1) (rest choices)))))
+
+(defun build-code (choice)
+  "Append together multiple constituents"
+  (cond ((null choice) nil)
+	((atom choice) (list choice))
+	((length=1 choice) choice)
+	(t `(append ,@(mapcar #'build-code choice)))))
+
+(defun length=1 (x)
+  "Is X a list of length 1?"
+  (and (consp x)(null (rest x))))
+
+
+(defmacro defrule (&rest rule)
+  "Define a grammar rule"
+  (compile-rule rule))
+
+(defstruct delay (value nil) (function nil))
+
+(defmacro delay (&rest body)
+  "A computation that can be executed later by FORCE."
+  `(make-delay :function #'(lambda () . ,body)))
+
+(defun force (x)
+  "Find the value of x, by computing if it is a delay."
+  (if (not (delay-p x))
+      x
+    (progn
+      (when (delay-function x)
+	(setf (delay-value x)
+	      (funcall (delay-function x)))
+	(setf (delay-function x) nil))
+      (delay-value x))))
+
+(defmacro make-pipe (head tail)
+  "Create a pipe by evaluating head and delaying tail."
+  `(cons ,head (lambda () ,tail)))
+
+(defconstant empty-pipe nil)
+
+(defun head (pipe) (first pipe))
+(defun tail (pipe)
+  "Return tail of pipe or list, and destructively update
+the tail if it is a function."
+  (if (functionp (rest pipe))
+      (setf (rest pipe) (funcall (rest pipe)))
+    (rest pipe)))
+
+
+(defun pipe-elt (pipe i)
+  "The i-th element of a pipe, 0-based"
+  (if (= i 0)
+      (head pipe)
+    (pipe-elt (tail pipe) (- i 1))))
+
+(defun integers (&optional (start 0) end)
+  "A pipe of integers from START to END.
+If END is nil, this is an infinite pipe."
+  (if (or (null end) (<= start end))
+      (make-pipe start (integers (+ start 1) end))
+    nil))
+
+(defun enumerate (pipe &key count key (result pipe))
+  "Go through all (or count) elemnets of pipe.
+possibly applying the KEY function. (Try PRINT.)"
+  ;; Returns RESULT, which defaults to the pipe itself.
+  (if (or (eq pipe empty-pipe) (count 0))
+	 result
+	 (progn
+	   (unless (null key) (funcall key (head pipe)))
+	   (enumerate (tail pipe) :count (if count (- count 1))
+		      :key key :result result))))
+
+(defun filter (pred pipe)
+  "Keep only items in pipe satisfying pred."
+  (if (funcall pred (head pipe))
+      (make-pipe (head pipe)
+		 (filter pred (tail pipe)))
+    (filter pred (tail pipe))))
