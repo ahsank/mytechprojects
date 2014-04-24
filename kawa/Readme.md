@@ -8,7 +8,7 @@ java kawa/repl
 Kawa on Android
 =========================
 ```bash
-cd =/Users/ahsank/packages/android
+cd /Users/ahsank/packages/android
 svn -q checkout svn://sourceware.org/svn/kawa/trunk kawa
 # Or get Kawa.1.14.tar.gz from the kawa web site
 KAWA_DIR=/Users/ahsank/packages/android/kawa
@@ -37,15 +37,19 @@ cd $PROJECT_DIR
 HELLO_APP_DIR=`pwd`
 cd $HELLO_APP_DIR/src/$PROJECT_PACKAGE_PATH
 rm $PROJECT_CLASS.java
-cat > $PROJECT_CLASS.scm
+```
+
+Create a hello.scm in the current folder with content:
+
+```scheme
 (require 'android-defs)
 (activity hello
   (on-create-view
    (android.widget.TextView (this)
     text: "Hello, Android from Kawa Scheme!")))
+```
 
-^D
-
+```bash
 cd $HELLO_APP_DIR
 ln -s $KAWA_DIR/kawa-1.14.1.jar libs/kawa.jar
 ln -s $KAWA_DIR/gnu/kawa/android/custom_rules.xml .
