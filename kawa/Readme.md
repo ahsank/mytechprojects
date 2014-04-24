@@ -1,12 +1,12 @@
 Running Kawa
 ====================
+```bash
 export CLASSPATH=/Users/ahsank/packages/java/lib/kawa-1.14.jar
 java kawa/repl
 #|kawa:1|#(exit)
-
+```
 Kawa on android
------------------
-# Kawa 1.14 doesn't work get the latest source
+=========================
 cd =/Users/ahsank/packages/android
 svn -q checkout svn://sourceware.org/svn/kawa/trunk kawa
 # Or get Kawa.1.14.tar.gz from the kawa web site
