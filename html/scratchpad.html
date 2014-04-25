@@ -1,0 +1,83 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Topic document</title>
+<style>
+</style>
+<script src="http://pagedown.googlecode.com/hg/Markdown.Converter.js"></script>
+<script src="http://pagedown.googlecode.com/hg/Markdown.Sanitizer.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
+<script>
+ (function() {
+ $(function() {
+  // When using more than one `textarea` on your page, change the following line to match the one you’re after
+  var $textarea = $('textarea'),
+      $preview = $('<div id="preview" />').insertAfter($textarea),
+      convert = new Markdown.getSanitizingConverter().makeHtml;
+  $textarea.keyup(function() {
+   $preview.html(convert($textarea.val()));
+   $("pre").addClass("prettyprint");
+
+}).trigger('keyup');
+ });
+ })(document, 'script');
+</script>
+<script type="text/javascript">
+<!--
+function toggle_visibility(id) {
+   var e = document.getElementById(id);
+   if(e.style.display == 'block')
+     e.style.display = 'none';
+   else
+      e.style.display = 'block';
+}
+//-->
+</script>
+
+<textarea style="display:none;" autofocus>
+Purpose
+============
+Generate HTML from markdown dymamically using javscript. One can write document in markdown in the text area
+and it will be shown in HTML in browser. To edit the content, use markdown-mode in emacs or use your
+favorite editor.
+
+Example
+------------
+
+Some Code:
+
+    int main(int argc, char **argv) {
+		printf("Hello world!\n")
+	}
+
+Some other code:
+
+    #!/bin/sh
+	gcc hello.c
+	./a.out
+
+
+Todos
+----------
+
+1. Support more tags.
+2. Make it more reliable.
+
+</textarea>
+
+<h1>Other</h1>
+Type  other code and texts that should be normally hidden in this area.
+
+<a href="#" onclick="toggle_visibility('foo');">More detail</a>
+<div id="foo" style="display:none">
+<pre >
+class Voila {
+public:
+  // Voila
+   static const string VOILA = "Voila";
+	
+  // will not interfere with embedded tags.
+}
+</pre>
+</div>
+
