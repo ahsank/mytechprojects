@@ -1,24 +1,27 @@
 Running Kawa
 ====================
 ```bash
-export CLASSPATH=/Users/ahsank/packages/java/lib/kawa-1.14.jar
+export CLASSPATH=$HOME/packages/java/lib/kawa-1.14.jar
 java kawa/repl
 #|kawa:1|#(exit)
 ```
 Kawa on Android
 =========================
 ```bash
-cd /Users/ahsank/packages/android
+mkdir ~/packages/android
+cd ~/packages/android
 svn -q checkout svn://sourceware.org/svn/kawa/trunk kawa
 # Or get Kawa.1.14.tar.gz from the kawa web site
-KAWA_DIR=/Users/ahsank/packages/android/kawa
+KAWA_DIR=~/packages/android/kawa
 cd kawa
 
-export ANDROID_HOME=/Users/ahsank/Development/adt-bundle/sdk
+export ANDROID_HOME=$HOME/Development/adt-bundle/sdk
 PATH=$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$PATH
 ANDROID_PLATFORM=android-18
-./configure --with-android=$ANDROID_HOME/platforms/$ANDROID_PLATFORM/android.jar --disable-xquery --disable-jemacs
+./configure --with-android=$ANDROID_HOME/platforms/$ANDROID_PLATFORM/android.jar \
+ --disable-xquery --disable-jemacs
 $ make
+# If it generates lot of makeinfo or tex error check if android.jar path is correct
 # ant -Denable-android=true doesn't work
 ```
 
@@ -31,7 +34,8 @@ PROJECT_PACKAGE=kawa.android
 PROJECT_PACKAGE_PATH=kawa/android
 
 cd  project parent dir
-android create project --target $ANDROID_PLATFORM --name $PROJECT_DIR --activity $PROJECT_CLASS --path ./$PROJECT_DIR --package $PROJECT_PACKAGE
+android create project --target $ANDROID_PLATFORM --name $PROJECT_DIR \
+ --activity $PROJECT_CLASS --path ./$PROJECT_DIR --package $PROJECT_PACKAGE
 
 cd $PROJECT_DIR
 HELLO_APP_DIR=`pwd`
