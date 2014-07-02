@@ -3,7 +3,7 @@
 
 (defun executing-p (x)
   "Is x of the form: (executing ...) ?"
-  (starts-with x 'executing))
+  (starts-with x 'excuting))
 
 (defun starts-with (list x)
   "Is this a list whose first element is x?"
@@ -46,8 +46,7 @@
 	current-state)))
 
 (defun achieve (state goal goal-stack)
-  "A goal is achieved if it already holds.
-or if there is an appropriate op for that is applicable."
+  "A goal is achieved if it already holds. or if there is an appropriate op for that is applicable."
   (dbg-indent :gps (length goal-stack) "Goal: ~a" goal)
   (cond ((member-equal goal state) state)
 	((member-equal goal goal-stack) nil)
@@ -72,8 +71,7 @@ or if there is an appropriate op for that is applicable."
 
 (defun find-all (item sequence &rest keyword-args
 		      &key (test #'eql) test-not &allow-other-keys)
-  "Find all those elements of sequence that match item,
-according to the keywords. Doesn't alter sequence."
+  "Find all those elements of sequence that match item, according to the keywords. Doesn't alter sequence."
   (if test-not
       (apply #'remove item sequence
 	     :test-not (complement test-not) keyword-args)
@@ -848,12 +846,12 @@ the action to that rule"
 
 (defun clear-memoize (fn-name)
   "Clear the hash table from a memo function."
-  (let ((table (get fn-name 'memo))
-	(when table (clrhash table)))))
+  (let ((table (get fn-name 'memo)))
+	(when table (clrhash table))))
 
 (defmacro defun-memo (fn args &body body)
   "Define a memoize function."
-  '(memoize (defun ,fn ,args . ,body)))
+  `(memoize (defun ,fn ,args . ,body)))
 
 
 (defun compile-rule (rule)
@@ -936,7 +934,7 @@ If END is nil, this is an infinite pipe."
   "Go through all (or count) elemnets of pipe.
 possibly applying the KEY function. (Try PRINT.)"
   ;; Returns RESULT, which defaults to the pipe itself.
-  (if (or (eq pipe empty-pipe) (count 0))
+  (if (or (eq pipe empty-pipe) (eq count 0))
 	 result
 	 (progn
 	   (unless (null key) (funcall key (head pipe)))
