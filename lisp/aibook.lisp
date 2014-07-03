@@ -3,7 +3,7 @@
 
 (defun executing-p (x)
   "Is x of the form: (executing ...) ?"
-  (starts-with x 'excuting))
+  (starts-with x 'executing))
 
 (defun starts-with (list x)
   "Is this a list whose first element is x?"
