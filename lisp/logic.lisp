@@ -6,7 +6,7 @@
   "Is x a variable (a symbol beginning with '?')?"
   (and (symbolp x) (equal (char (symbol-name x) 0) #\?)))
 
-;; (get-binding '?x '((?y . b) (?x . a))) ==? (?X . A)
+;; (get-binding '?x '((?y . b) (?x . a))) == (?X . A)
 (defun get-binding (var bindings)
   "Find a (variable . value) pair in a binding list. A binding is a list of
 associated pair. Use extend bindings to create a new binding"
@@ -63,9 +63,16 @@ to create initial binding"
 		(unify (first x) (first y) bindings)))
 	 (t fail)))
 
+;; (unify-variable '?x 'a '((?y . b) (?x . a))) => '((?Y . B) (?X . A))
+;; (unify-variable '?x 'a '((?y . a ) (?x . b))) ==> NIL
+;; (unify-variable '?x '?y '((?y . a) (?x . a))) ==> '((?Y . A) (?X . A))
+;; (unify-variable '?x '?y '((?y . a) (?x . b))) ==> NIL
+;; (unify-variable '?x '?y '((?y . a))) ==>  '((?X . A) (?Y . A))
+;; (unify-variable '?x '?y '((?x . a))) ==> '((?Y . A) (?X . A))
+;; (unify-variable '?x '?y '((?x . ?y)) ==> '((?X . ?Y))
+;; (unify-variable '?x 'a '((?x . ?y) (?y . a))) ==> ((?X . ?Y) (?Y . A))
 (defun unify-variable (var x bindings)
   "Unify var with x, using (and maybe extending) bindings."
-  ;; Warning - buggy version
   (cond ((get-binding var bindings)
 	 (unify (lookup var bindings) x bindings))
 	((and (variable-p x) (get-binding x bindings))
@@ -82,7 +89,8 @@ to create initial binding"
 		       (occurs-check var (rest x) bindings)))
 	(t nil)))
 
-
+;;  (subst-bindings '((?x . a)) '?x) ==> A
+;;  ((subst-bindings '((?x . a) (?y . ?x)) '?y) ==> A
 (defun subst-bindings (bindings x)
   "Substitute the value of variable in bindings into x,
 taking recursively bound variables into account."
@@ -155,8 +163,8 @@ taking recursively bound variables into account."
   "Return a list of solutions to the conjunction of goals."
   (cond ((eq bindings fail) fail)
 	((null goals) (list bindings))
-	(t (mapcan #'(lambda (goal-solution)
-		       (prove-all (rest goals) goal-solution))
+	(t (mapcan #'(lambda (goal1-solution)
+		       (prove-all (rest goals) goal1-solution))
 		   (prove (first goals) bindings)))))
 
 (defun rename-variables (x)
@@ -183,8 +191,30 @@ with duplication removed."
      (unique-find-anywhere-if  predicate (rest tree)
 			      found-so-far))))
 
-(defmacro ?- (&rest goals) `(prove-all ',goals no-bindings))
+(defmacro ?- (&rest goals) `(top-level-prove ',goals))
+
+(defun top-level-prove (goals)
+ "Prove the goals, and print variables readably."
+ (show-prolog-solutions
+  (variables-in goals)
+  (prove-all goals no-bindings)))
+
+(defun show-prolog-solutions (vars solutions)
+  "Print the variables in each of the solutions."
+  (if (null solutions)
+      (format t "~&No.")
+      (mapc #'(lambda (solution) (show-prolog-vars vars solution))
+	    solutions))
+  (values))
 
 
+(defun show-prolog-vars (vars bindings)
+  "Print each variable with its bindings."
+  (if (null vars)
+      (format t "~&Yes")
+      (dolist (var vars)
+	(format t "~&~a = ~a" var
+		(subst-bindings bindings var))))
+  (princ ":"))
 
     
