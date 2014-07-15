@@ -151,24 +151,38 @@ taking recursively bound variables into account."
   "Remove the clauses for a single predicat."
   (setf (get predicate 'clauses) nil))
 
-(defun prove (goal bindings)
-  "Return a list of possible solutions to goal."
-  (mapcan #'(lambda (clause)
-	      (let ((new-clause (rename-variables clause)))
-		(prove-all (clause-body new-clause)
-			   (unify goal (clause-head new-clause) bindings))))
-	  (get-clauses (predicate goal))))
-
 (defun prove-all (goals bindings)
-  "Return a list of solutions to the conjunction of goals."
+  "Find a solution to the conjunction of goals."
+  (format t "Prove-all ~&~a" goals)
   (cond ((eq bindings fail) fail)
-	((null goals) (list bindings))
-	(t (mapcan #'(lambda (goal1-solution)
-		       (prove-all (rest goals) goal1-solution))
-		   (prove (first goals) bindings)))))
+	((null goals) bindings)
+	(t (prove (first goals) bindings (rest goals)))))
+
+(defun prove (goal bindings other-goals)
+  "Return a list of possible solutions to goal."
+  (let ((clauses1 (get-clauses (predicate goal))))
+    (format t "Prove ~&~a ~a" goal clauses1)
+    (if (listp clauses1)
+	(progn
+	  (format t "~&List dump ~a" clauses1)
+	  (some #'(lambda(x) (format t "~&Dump ~a" x)) clauses1) 
+	(some 
+	 #'(lambda (c1)
+	     (let ((new-clause (rename-variables c1)))
+		    (format t "~&lambda ~a" c1)
+		    (prove-all
+		     (append (clause-body new-clause) other-goals)
+		     (unify goal (clause-head new-clause) bindings))))
+	      clauses1))
+      ;; The predicate's "clauses" can be an atom:
+      ;; a primitive function to call
+      (funcall clauses1 (rest goal) bindings
+	       other-goals))))
+
 
 (defun rename-variables (x)
   "Replace all variables in x with new ones."
+  (format t "~&Rename variable ~a" x)
   (sublis (mapcar #'(lambda (var) (cons var (gensym (string var))))
 		  (variables-in x))
 	  x))
@@ -194,27 +208,30 @@ with duplication removed."
 (defmacro ?- (&rest goals) `(top-level-prove ',goals))
 
 (defun top-level-prove (goals)
- "Prove the goals, and print variables readably."
- (show-prolog-solutions
-  (variables-in goals)
-  (prove-all goals no-bindings)))
-
-(defun show-prolog-solutions (vars solutions)
-  "Print the variables in each of the solutions."
-  (if (null solutions)
-      (format t "~&No.")
-      (mapc #'(lambda (solution) (show-prolog-vars vars solution))
-	    solutions))
+  (prove-all `(,@goals (show-prolog-vars ,@(variables-in goals)))
+	     no-bindings)
+  (format t "~&No.")
   (values))
 
-
-(defun show-prolog-vars (vars bindings)
-  "Print each variable with its bindings."
+(defun show-prolog-solutions (vars bindings other-goals)
+  "Print the variables with its-bindings."
   (if (null vars)
       (format t "~&Yes")
-      (dolist (var vars)
-	(format t "~&~a = ~a" var
-		(subst-bindings bindings var))))
-  (princ ":"))
+    (dolist (var vars)
+      (format t "~&~a = ~a" var
+	      (subst-bindings bindings var))))
+  (if (continue-p)
+      fail
+    (prove-all other-goals bindings)))
+
+(defun continue-p ()
+  "Ask user if we should continue looking for solutions."
+  (case (read-char)
+    (#\; t)
+    (#\. nil)
+    (#\newline (continue-p))
+    (otherwise
+     (format t " Type ; to see more or . to stop")
+     (continue-p))))
 
     
