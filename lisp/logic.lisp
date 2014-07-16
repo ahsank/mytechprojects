@@ -153,36 +153,31 @@ taking recursively bound variables into account."
 
 (defun prove-all (goals bindings)
   "Find a solution to the conjunction of goals."
-  (format t "Prove-all ~&~a" goals)
   (cond ((eq bindings fail) fail)
 	((null goals) bindings)
 	(t (prove (first goals) bindings (rest goals)))))
 
 (defun prove (goal bindings other-goals)
   "Return a list of possible solutions to goal."
-  (let ((clauses1 (get-clauses (predicate goal))))
-    (format t "Prove ~&~a ~a" goal clauses1)
-    (if (listp clauses1)
-	(progn
-	  (format t "~&List dump ~a" clauses1)
-	  (some #'(lambda(x) (format t "~&Dump ~a" x)) clauses1) 
+  (let ((clauses (get-clauses (predicate goal))))
+    (if (listp clauses)
 	(some 
-	 #'(lambda (c1)
-	     (let ((new-clause (rename-variables c1)))
-		    (format t "~&lambda ~a" c1)
-		    (prove-all
-		     (append (clause-body new-clause) other-goals)
-		     (unify goal (clause-head new-clause) bindings))))
-	      clauses1))
+	 #'(lambda (clause)
+	     (let ((new-clause (rename-variables clause)))
+	       (prove-all
+		(append (clause-body new-clause) other-goals)
+		(unify goal (clause-head new-clause) bindings))))
+	      clauses)
       ;; The predicate's "clauses" can be an atom:
       ;; a primitive function to call
-      (funcall clauses1 (rest goal) bindings
+      (funcall clauses (rest goal) bindings
 	       other-goals))))
 
+(setf (get 'show-prolog-vars 'clauses) nil)
+(setf (get 'show-prolog-vars 'clauses) 'show-prolog-vars)
 
 (defun rename-variables (x)
   "Replace all variables in x with new ones."
-  (format t "~&Rename variable ~a" x)
   (sublis (mapcar #'(lambda (var) (cons var (gensym (string var))))
 		  (variables-in x))
 	  x))
@@ -213,7 +208,7 @@ with duplication removed."
   (format t "~&No.")
   (values))
 
-(defun show-prolog-solutions (vars bindings other-goals)
+(defun show-prolog-vars (vars bindings other-goals)
   "Print the variables with its-bindings."
   (if (null vars)
       (format t "~&Yes")
@@ -234,4 +229,3 @@ with duplication removed."
      (format t " Type ; to see more or . to stop")
      (continue-p))))
 
-    
