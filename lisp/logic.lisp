@@ -131,7 +131,19 @@ taking recursively bound variables into account."
 ;; Prolog: member(X, [Y|L]) :- member(X, L).
 (defmacro <- (&rest clause)
   "Add a clause to the data base."
-  `(add-clause ',clause))
+  `(add-clause ',(replace-?-vars clause)))
+
+(defmacro ?- (&rest goals)
+  "Make a query and print answers."
+  `(top-level-prove ',(replace-?-vars goals)))
+
+(defun replace-?-vars (exp)
+  "Replace any ? within exp with a var of the form ?123."
+  (cond ((eq exp '?) (gensym "?"))
+	((atom exp) exp)
+	(t (reuse-cons (replace-?-vars (first exp))
+		       (replace-?-vars (rest exp))
+		       exp))))
 
 (defun add-clause (clause)
   "Add a clause to the data base, indexed by head's predicate."
@@ -200,8 +212,6 @@ with duplication removed."
      (unique-find-anywhere-if  predicate (rest tree)
 			      found-so-far))))
 
-(defmacro ?- (&rest goals) `(top-level-prove ',goals))
-
 (defun top-level-prove (goals)
   (prove-all `(,@goals (show-prolog-vars ,@(variables-in goals)))
 	     no-bindings)
@@ -229,3 +239,46 @@ with duplication removed."
      (format t " Type ; to see more or . to stop")
      (continue-p))))
 
+(clear-predicate 'member)
+(clear-predicate 'zebra)
+(clear-predicate 'iright)
+(clear-predicate 'nextto)
+(clear-predicate '=)
+
+(<- (zebra ?h ?w ?z)
+    ;; Each house is of the form:
+    ;; (house nationality pet cigarette drink house-color)
+    (= ?h ((house norwegian ? ? ? ?)
+	   ?
+	   (house ? ? ? milk ?) ? ?))
+    (member (house englishman ? ? ? red) ?h)
+    (member (house spaniard dog ? ? ?) ?h)
+    (member (house ? ? ? coffee green) ?h)
+    (member (house ukrainian ? ? tea ?) ?h)
+    (iright (house ? ? ? ? ivory)
+	    (house ? ? ? ? green) ?h)
+    (member (house ? snails winston ? ?) ?h)
+    (member (house ? ? kools ? yellow) ?h)
+    (nextto (house ? ? chesterfield ? ?)
+	    (house ? fox ? ? ?) ?h)
+    (nextto (house ? ? kools ? ?)
+	    (house ? horse ? ? ?) ?h)
+    (member (house ? ? luckystrike orange-juice ?) ?h)
+    (member (house japanese ? parliaments ? ?) ?h)
+    (nextto (house norwegian ? ? ? ?)
+	    (house ? ? ? ? blue) ?h)
+    ;; Now for the question
+    (member (house ?w ? ? water ?) ?h)
+    (member (house ?z zebra ? ? ?) ?h))
+
+(<- (member ?item (?item . ?rest)))
+(<- (member ?item (?x . ?rest) (mbember ?item ?rest)))
+
+(<- (nextto ?x ?y ?list) (iright ?x ?y ?list))
+(<- (nextto ?x ?y ?list) (iright ?y ?x ?list))
+
+(<- (iright ?left ?right (?left ?right . ?rest)))
+(<- (iright ?left ?right (?x . ?rest))
+    (iright ?left ?right ?rest))
+
+(<- (= ?x ?x))
