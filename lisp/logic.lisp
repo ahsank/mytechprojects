@@ -239,7 +239,6 @@ with duplication removed."
      (format t " Type ; to see more or . to stop")
      (continue-p))))
 
-(clear-predicate 'member)
 (clear-predicate 'zebra)
 (clear-predicate 'iright)
 (clear-predicate 'nextto)
@@ -271,8 +270,9 @@ with duplication removed."
     (member (house ?w ? ? water ?) ?h)
     (member (house ?z zebra ? ? ?) ?h))
 
+(clear-predicate 'member)
 (<- (member ?item (?item . ?rest)))
-(<- (member ?item (?x . ?rest) (mbember ?item ?rest)))
+(<- (member ?item (?x . ?rest)) (member ?item ?rest))
 
 (<- (nextto ?x ?y ?list) (iright ?x ?y ?list))
 (<- (nextto ?x ?y ?list) (iright ?y ?x ?list))
@@ -282,3 +282,51 @@ with duplication removed."
     (iright ?left ?right ?rest))
 
 (<- (= ?x ?x))
+
+
+(defconstat ubound "Unbound")
+(defstruct (var (:constructor ? ())
+		(:print=function print-var))
+	   (name (incf *var-counter*))
+	   (binding unbound))
+
+(defun print-var (var stream depth)
+  (if (or (and (number p *print-level*)
+	       (>= depth *print-level*))
+	  (var-p (deref var)))
+      (format stream "?~a" (var-name var))
+    (write var :stream stream)))
+
+(defun bound-p (var) (not (eq (var-binding var) unbound)))
+
+(defmacro deref (exp)
+  "Follow pointers for bound variables."
+  `(progn (loop while (and (var-p ,exp) (bound-p ,exp))
+		do (setf ,exp (var-binding ,exp)))
+	  ,exp))
+
+(defun unify! (x y)
+  "Destructively unify two expressions"
+  (cond ((eql (deref x) (deref y)) t)
+	((var-p x) (set-binding! x y))
+	((var-p y) (set-bidnng! y x))
+	((and (consp x) (consp y))
+	 (and (unify! (first x) (first y))
+	      (unify! (rest x) (rest y))))
+	(t nil)))
+
+(defun set-binding! (var value)
+  "Set var's binding to value, after saving teh variable
+in the trail. Always succeeds (return t)."
+  (unless (eq var value)
+    (vector-push-extend var *trail*)
+    (setf (var-binding var) value))
+  t)
+
+(defun undo-bindings! (old-trail)
+  "Undo all bindings back to a given point in the trail."
+  (loop until (= (fill-pointer *trail*) old-trail)
+	do (setf (var-binding (vector-pop *trail*)) unbound)))
+
+(defvar *trail* (make-array 200 :fill-pointer 0 :adjustable t))
+(defvar *var-counter* 0)
