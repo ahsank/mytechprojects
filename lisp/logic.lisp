@@ -284,9 +284,9 @@ with duplication removed."
 (<- (= ?x ?x))
 
 
-(defconstat ubound "Unbound")
+(defconstant unbound "Unbound")
 (defstruct (var (:constructor ? ())
-		(:print=function print-var))
+		(:print-function print-var))
 	   (name (incf *var-counter*))
 	   (binding unbound))
 
@@ -366,9 +366,10 @@ into a single LISP function."
     (compile
      (eval
       `(defun ,predicate (,@parameters cont)
-	 .,(mapcar #'(lambda (clause)
-		       (compile-clause parameter clause 'cont))
-		   clauses))))))
+	 .,(maybe-add-undo-bindings
+	    (mapcar #'(lambda (clause)
+			  (compile-clause parameter clause 'cont))
+		      clauses)))))))
 
 (defun make-parameters (arity)
   "Return the list (?arg1 ?arg2 ... ?arg-arity)"
@@ -381,11 +382,35 @@ into a single LISP function."
 
 (defun compile-clause (params clause cont)
   "Transform away the head, then compile the resulting body."
-  (compile-body
-   (nconc
-    (mapcar #'make-= params (args (clause-head clause)))
-    (clause-body clause))
-   cont))
+  (bind-unbound-vars
+   params
+   (compile-body
+    (nconc
+     (mapcar #'make-= params (args (clause-head clause)))
+     (clause-body clause))
+    cont)))
+
+(defun maybe-add-undo-bindings (compiled-exps)
+  "Undo any bindings that need undoing.
+If there are any, bind the trail before we start."
+  (if (length=1 compiled-exps)
+      compiled-exps
+    `((let ((old-trail (fill-pointer *trail*)))
+	,(first compiled-exps)
+	,@(loop for exp in (rest compiled-exps)
+		collect '(undo-bindings old-trail)
+		collect exp)))))
+
+(defun bind-unbound-vars (parameer exp)
+  "If there are any variables in exp (besides the parameters)
+then bind them to new vars."
+  (let ((exp-vars (set-difference (variables-in exp)
+				  parameters)))
+    If (exp-vars
+	`(let ,(mapcar #'(lambda (var) `(,var (?))) ;;** why ` before var?
+		       exp-vars)
+	   ,exp)
+	exp)))
 
 (defun make-= (x y) `(= ,x ,y))
 
@@ -430,7 +455,7 @@ into a single LISP function."
       `(if ,(compile-unify (first args) (second args))
 	   ,(compile-body body cont)))))
 
-(define compile-unify (x y)
+(defun compile-unify (x y)
   "Return code that tests if var and term unify."
   `(unify! ,(compile-arg x) ,(compile-arg y)))
 
