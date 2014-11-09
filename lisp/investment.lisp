@@ -24,3 +24,5 @@ value < sum(portfolio-values[0..i]"
 	 ((>= (second current) value) current)
 	 (t (choose-element (cdr portfolio-values)
 			   (- value (second current)))))))
+
+(setf *random-state* (make-random-state t))
