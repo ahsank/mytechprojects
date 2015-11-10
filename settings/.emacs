@@ -114,3 +114,4 @@
    (interactive "nTransparency Value 0 - 100 opaque:")
    (set-frame-parameter (selected-frame) 'alpha value))
 
+(setq make-backup-files nil)
