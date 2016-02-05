@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# search for project base
+INIT_DIR=`pwd`
+while [ "$PWD" != "/" ] ; do
+  if [ -e "gradlew" ] ; then
+    break
+  fi
+
+  cd ..
+done
+
+if [ ! -e "gradlew" ] ; then
+  echo "Couldn't find 'gradlew'!"
+  exit 1
+fi
+
+# indicate where we are now
+echo "cd "`pwd`
+echo gradlew "$@"
+
+# now run make for real
+exec ./gradlew assembleDebug

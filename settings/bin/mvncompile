@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# search for project base
+INIT_DIR=`pwd`
+while [ "$PWD" != "/" ] ; do
+  if [ -e "pom.xml" ] ; then
+    break
+  fi
+
+  cd ..
+done
+
+if [ ! -e "pom.xml" ] ; then
+  echo "Couldn't find 'pom.xml'!"
+  exit 1
+fi
+
+# indicate where we are now
+echo "cd "`pwd`
+echo mvn package "$@"
+
+# now run make for real
+exec mvn package
