@@ -29,7 +29,7 @@ TimeTracker.prototype.getWaitTime = function () {
         this.times.push(timeMs);
         return 0;
     }    
-    return this.times[0] + 1000;
+    return this.times[0] + 1000 - timeMs;
 }
 
 var users = {};
@@ -40,9 +40,7 @@ function checkLimit(tracker, callback) {
         callback();
         return;
     }
-    setTimeout(function() {
-        checkLimit(tracker, callback);
-    }, waitTime);
+    setTimeout(checkLimit, waitTime, tracker, callback);
 }
 
 var exports = module.exports = {};

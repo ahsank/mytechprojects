@@ -1,5 +1,3 @@
-console.log("Hello World!");
-
 concurrent = require("./concurrentLibrary.js");
 
 var getTime = function () {
