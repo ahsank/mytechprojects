@@ -1,0 +1,11 @@
+{
+  "name": "concurrentLibrary",
+  "version": "0.0.0",
+  "description": "Library to call remote api with rate limit",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodeunit unittest.js"
+  },
+  "author": "Ahsan Khan",
+  "license": "BSD-2-Clause"
+}
