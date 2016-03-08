@@ -5,12 +5,13 @@
 
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="description" content="">
+    <Meta name="description" content="">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
 
     <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Roboto:400,500,700,400italic'>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.css"/>
+    <link rel="stylesheet" href="style.css"/>
 
     <style type="text/css">
         /**
@@ -57,14 +58,19 @@
 
       <md-content flex id="main-section" layout-xs="column" layout="row">
         <div flex-xs="" flex-gt-xs="100" layout="column">
-        <md-card flex-gt-xs="100" flex> Card text
-          <span flex>Span</span>
+        <md-card flex-gt-xs="100" flex>
+	<div ng-repeat="note in notes" note="note" my-draggable class="sticky_notes" ondelete="deleteNote(id)" style="position: absolute; top: 40px; left: 40px;">
+          <div contenteditable="true" >
+            {{note.body}}
+          </div>
+	</div>
+
         </md-card>
         </div>
       </md-content>
 
       <div layout="row">
-        <md-button class="md-primary md-fab md-fab-bottom-right">
+        <md-button class="md-primary md-fab md-fab-bottom-right" ng-click="createNote()">
           <md-icon class="material-icons">edit</md-icon>
         </md-button>
       </div>
