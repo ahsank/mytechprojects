@@ -49,7 +49,7 @@
           <md-button class="md-icon-button icon-right" aria-label="Menu"  ng-click="alert('aaa');toggleSidenav()">
             <md-icon class="material-icons">menu</md-icon>
           </md-button>
-          <h3>Angular Material - Starter App</h3>
+          <h3>Angular Material - Sticky Note App</h3>
           <span flex></span>
           <md-button class="md-icon-button icon-right" aria-label="Search">
             <md-icon class="material-icons">search</md-icon>
@@ -59,8 +59,8 @@
       <md-content flex id="main-section" layout-xs="column" layout="row">
         <div flex-xs="" flex-gt-xs="100" layout="column">
         <md-card flex-gt-xs="100" flex>
-	<div ng-repeat="note in notes" note="note" my-draggable class="sticky_notes" ondelete="deleteNote(id)" style="position: absolute; top: 40px; left: 40px;">
-          <div contenteditable="true" >
+	<div ng-repeat="note in notes" note="note" ng-dblclick="doEdit=true;" my-draggable class="sticky_notes" ondelete="deleteNote(id)" style="position: absolute; top: 40px; left: 40px;">
+          <div contenteditable="true" focus-me="doEdit">
             {{note.body}}
           </div>
 	</div>
