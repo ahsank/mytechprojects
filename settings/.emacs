@@ -84,8 +84,8 @@
 ;; (load-theme 'solarized-light t)
 ;; (load-theme 'feng-shui t)
 ;; (require 'color-theme)
-(color-theme-initialize)
-(setq color-theme-is-global t)
+;; (color-theme-initialize)
+;; (setq color-theme-is-global t)
 ;;(color-theme-vim-colors)
 ;;(color-theme-dark-laptop)
 
@@ -115,3 +115,9 @@
    (set-frame-parameter (selected-frame) 'alpha value))
 
 (setq make-backup-files nil)
+
+
+(setq-default tab-width 2)
+
+(add-to-list 'load-path (expand-file-name "~/work/src/github.com/chriskempson/tomorrow-theme/GNU Emacs"))
+(require 'color-theme-tomorrow)
