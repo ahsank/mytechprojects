@@ -118,6 +118,7 @@
 
 
 (setq-default tab-width 2)
+(setq js-indent-level 2)
 
 (add-to-list 'load-path (expand-file-name "~/work/src/github.com/chriskempson/tomorrow-theme/GNU Emacs"))
 (require 'color-theme-tomorrow)
