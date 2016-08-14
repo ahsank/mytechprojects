@@ -126,3 +126,4 @@
 ;; golang emacs
 (add-to-list 'load-path (expand-file-name "~/work/src/github.com/dominikh/go-mode.el"))
 (require 'go-mode-autoloads)
+(add-hook 'before-save-hook #'gofmt-before-save)
